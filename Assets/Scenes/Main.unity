@@ -379,6 +379,38 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1668787079574850921, guid: 86f8cd44a77b54cb2bf46bfc4198934e, type: 3}
+      propertyPath: shapeSprites.Array.size
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 1668787079574850921, guid: 86f8cd44a77b54cb2bf46bfc4198934e, type: 3}
+      propertyPath: 'shapeSprites.Array.data[0]'
+      value: 
+      objectReference: {fileID: 21300000, guid: 77d5df1666ec9af4eac2e164b4b087da, type: 3}
+    - target: {fileID: 1668787079574850921, guid: 86f8cd44a77b54cb2bf46bfc4198934e, type: 3}
+      propertyPath: 'shapeSprites.Array.data[1]'
+      value: 
+      objectReference: {fileID: 21300000, guid: e5064ab11d903d640a3f08b65fe22c08, type: 3}
+    - target: {fileID: 1668787079574850921, guid: 86f8cd44a77b54cb2bf46bfc4198934e, type: 3}
+      propertyPath: 'shapeSprites.Array.data[2]'
+      value: 
+      objectReference: {fileID: 21300000, guid: 994cff2baf2ec4740a729c679b3716d6, type: 3}
+    - target: {fileID: 1668787079574850921, guid: 86f8cd44a77b54cb2bf46bfc4198934e, type: 3}
+      propertyPath: 'shapeSprites.Array.data[3]'
+      value: 
+      objectReference: {fileID: 21300000, guid: 5b3a1c4f2d2e1f846a6e76cd2c5aa23b, type: 3}
+    - target: {fileID: 1668787079574850921, guid: 86f8cd44a77b54cb2bf46bfc4198934e, type: 3}
+      propertyPath: 'shapeSprites.Array.data[4]'
+      value: 
+      objectReference: {fileID: 21300000, guid: d4d464255adb8b3489f667a17e72b2a3, type: 3}
+    - target: {fileID: 1668787079574850921, guid: 86f8cd44a77b54cb2bf46bfc4198934e, type: 3}
+      propertyPath: 'shapeSprites.Array.data[5]'
+      value: 
+      objectReference: {fileID: 21300000, guid: a4dd387ce6156d84786bddbd2663dedc, type: 3}
+    - target: {fileID: 1668787079574850921, guid: 86f8cd44a77b54cb2bf46bfc4198934e, type: 3}
+      propertyPath: 'shapeSprites.Array.data[6]'
+      value: 
+      objectReference: {fileID: 21300000, guid: a78829c9f8116cf42b5f0fb1b09be313, type: 3}
     - target: {fileID: 5667286529705699341, guid: 86f8cd44a77b54cb2bf46bfc4198934e, type: 3}
       propertyPath: m_Name
       value: TetrisShape

@@ -6,6 +6,7 @@ public class ShapeGroupMover : MonoBehaviour
     public GameObject squarePrefab;
 
     public enum ShapeType { I, J, L, O, S, T, Z }
+    public Sprite[] shapeSprites;
     public ShapeType shapeType = ShapeType.I;
     public bool randomShape = false;
 
@@ -28,6 +29,7 @@ public class ShapeGroupMover : MonoBehaviour
         {
             GameObject square = Instantiate(squarePrefab, transform);
             square.transform.localPosition = new Vector3(pos.x, pos.y, 0);
+            SetSprite(square, type);
         }
     }
 
@@ -43,6 +45,15 @@ public class ShapeGroupMover : MonoBehaviour
             case ShapeType.T: return new List<Vector2Int> { new(1, 0), new(0, 1), new(1, 1), new(2, 1) };
             case ShapeType.Z: return new List<Vector2Int> { new(0, 0), new(1, 0), new(1, 1), new(2, 1) };
             default: return new List<Vector2Int>();
+        }
+    }
+
+    void SetSprite(GameObject square, ShapeType type)
+    {
+        if (shapeSprites.Length > (int)type && shapeSprites[(int)type] != null)
+        {
+            square.GetComponent<SpriteRenderer>().sprite = shapeSprites[(int)type];
+            square.GetComponent<SpriteRenderer>().transform.localScale = new Vector3(0.25f, 0.25f, 1); // Skalierung anpassen
         }
     }
 
