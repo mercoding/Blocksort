@@ -13,6 +13,10 @@ public class ShapeGroupMover : MonoBehaviour
     private bool isDragging = false;
     private Vector3 offset;
 
+    public PieceGhostCreator ghostCreator;
+    public Vector3 lastValidPosition;
+
+
     void Start()
     {
         if (randomShape) GenerateTetrisShape((ShapeType)Random.Range(0, System.Enum.GetValues(typeof(ShapeType)).Length));
@@ -20,6 +24,8 @@ public class ShapeGroupMover : MonoBehaviour
         int rot = Random.Range(0, 4);
         transform.rotation = Quaternion.Euler(0, 0, rot * 90);
         AdjustCollider();
+        ghostCreator = GetComponent<PieceGhostCreator>();
+        lastValidPosition = transform.position;
     }
 
     void GenerateTetrisShape(ShapeType type)
@@ -30,10 +36,13 @@ public class ShapeGroupMover : MonoBehaviour
             GameObject square = Instantiate(squarePrefab, transform);
             square.transform.localPosition = new Vector3(pos.x, pos.y, 0);
             SetSprite(square, type);
+            //GameObject.Find("Field").GetComponent<Field>().grid[(int)pos.x, (int)pos.y] = square.transform;
+            Field.grid[(int)pos.x, (int)pos.y] = square.transform;
+
         }
     }
 
-    List<Vector2Int> GetShapePositions(ShapeType type)
+    public List<Vector2Int> GetShapePositions(ShapeType type)
     {
         switch (type)
         {
@@ -62,12 +71,41 @@ public class ShapeGroupMover : MonoBehaviour
         // Maussteuerung
         MouseInteraktion();
         TouchInteraktion();
+        SnapToGrid();
+    }
+
+    bool CanPlace()
+    {
+        foreach (Transform block in transform)
+        {
+            Vector2 pos = Field.RoundToGrid(block.position);
+            if (!Field.IsInsideGrid(pos)) return false;
+            if (Field.grid[(int)pos.x, (int)pos.y] != null &&
+                Field.grid[(int)pos.x, (int)pos.y].parent != transform)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void SnapToGrid()
+    {
+        Field.RemoveFromGrid(transform);
+        Vector2 pos = Field.RoundToGrid(transform.position);
+        transform.position = new Vector3(pos.x, pos.y, 0);
+        Field.AddToGrid(transform);
+        AdjustCollider();
     }
 
     void TouchBegan(Vector3 touchWorldPos)
     {
         if (Vector2.Distance(transform.position, touchWorldPos) < 1f)
         {
+            if (ghostCreator != null)
+            {
+                ghostCreator.CreateGhost();
+            }
             isDragging = true;
             offset = transform.position - new Vector3(touchWorldPos.x, touchWorldPos.y, 0);
         }
@@ -93,8 +131,21 @@ public class ShapeGroupMover : MonoBehaviour
             {
                 case TouchPhase.Began: TouchBegan(Vector3 touchWorldPos); break;
                 case TouchPhase.Moved: TouchMoved(Vector3 touchWorldPos); break;
-                case TouchPhase.Ended:
-                case TouchPhase.Canceled: isDragging = false; break;
+                case TouchPhase.Ended: 
+                case TouchPhase.Canceled: 
+                    if (!CanPlace())
+                    {
+                        transform.position = lastValidPosition;
+                        SnapToGrid();
+                    }
+                    else
+                    {
+                        lastValidPosition = transform.position;
+                        //SnapToGrid();
+                    }
+                    if (ghostCreator != null) ghostCreator.RemoveGhost();
+                    isDragging = false; 
+                break;
             }
         }
 #endif
@@ -104,18 +155,23 @@ public class ShapeGroupMover : MonoBehaviour
     void CheckCollider(Vector3 mouseWorldPos)
     {
         Vector2 mousePos2D = new Vector2(mouseWorldPos.x, mouseWorldPos.y);
-        var collider = GetComponent<BoxCollider2D>();
-        if (collider != null && collider.OverlapPoint(mousePos2D))
+        var hit = Physics2D.Raycast(mousePos2D, Vector2.zero);
+        if (hit.collider != null && hit.collider.gameObject == gameObject)
         {
             isDragging = true;
             offset = transform.position - new Vector3(mouseWorldPos.x, mouseWorldPos.y, 0);
         }
     }
+    
 
     void OnMouseButtonDown()
     {
         if (Input.GetMouseButtonDown(0))
         {
+            if (ghostCreator != null)
+            {
+                ghostCreator.CreateGhost();
+            }
             Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             CheckCollider(mouseWorldPos);
         }
@@ -135,6 +191,17 @@ public class ShapeGroupMover : MonoBehaviour
     {
         if (Input.GetMouseButtonUp(0) && isDragging)
         {
+            if (!CanPlace())
+            {
+                transform.position = lastValidPosition;
+                SnapToGrid();
+            }
+            else
+            {
+                lastValidPosition = transform.position;
+                //SnapToGrid();
+            }
+            if (ghostCreator != null) ghostCreator.RemoveGhost();
             isDragging = false;
         }
     }

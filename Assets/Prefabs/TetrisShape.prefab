@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7088424846086456765}
   - component: {fileID: 1668787079574850921}
+  - component: {fileID: 1466255101971171601}
   m_Layer: 0
   m_Name: TetrisShape
   m_TagString: Untagged
@@ -26,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 5667286529705699341}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 5, y: 5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -45,5 +46,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   squarePrefab: {fileID: 581595901633281380, guid: 15225449dd5b6430d9f1b0deb7c46487, type: 3}
+  shapeSprites:
+  - {fileID: 21300000, guid: 77d5df1666ec9af4eac2e164b4b087da, type: 3}
+  - {fileID: 21300000, guid: e5064ab11d903d640a3f08b65fe22c08, type: 3}
+  - {fileID: 21300000, guid: 994cff2baf2ec4740a729c679b3716d6, type: 3}
+  - {fileID: 21300000, guid: 5b3a1c4f2d2e1f846a6e76cd2c5aa23b, type: 3}
+  - {fileID: 21300000, guid: d4d464255adb8b3489f667a17e72b2a3, type: 3}
+  - {fileID: 21300000, guid: a4dd387ce6156d84786bddbd2663dedc, type: 3}
+  - {fileID: 21300000, guid: a78829c9f8116cf42b5f0fb1b09be313, type: 3}
+  - {fileID: 21300000, guid: eacf780d8cc908e4e814340733a2ebc0, type: 3}
   shapeType: 2
   randomShape: 1
+  ghostCreator: {fileID: 1466255101971171601}
+  lastValidPosition: {x: 0, y: 0, z: 0}
+--- !u!114 &1466255101971171601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5667286529705699341}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f413de5b919a4740933fcaa837ffcdb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ghostPrefab: {fileID: 5667286529705699341}
