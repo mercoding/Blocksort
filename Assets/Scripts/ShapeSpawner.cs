@@ -35,20 +35,20 @@ public class ShapeSpawner : MonoBehaviour
         }
 
         foreach (var pos in allPositions)
-{
-    var type = shapeTypes[rnd.Next(shapeTypes.Length)];
-    List<Vector2Int> positions = GetShapePositions(type, pos);
+        {
+            var type = shapeTypes[rnd.Next(shapeTypes.Length)];
+            List<Vector2Int> positions = GetShapePositions(type, pos);
 
-    // Prüfe, ob ALLE Blöcke im Grid liegen und frei sind
-    if (IsValidPlacement(positions))
-    {
-        SpawnShape(type, pos);
-        foreach (var gridPos in positions)
-            Field.grid[gridPos.x, gridPos.y] = new GameObject("TempBlock").transform;
-        spawned++;
-        if (spawned >= count) break;
-    }
-}
+            // Prüfe, ob ALLE Blöcke im Grid liegen und frei sind
+            if (IsValidPlacement(positions))
+            {
+                SpawnShape(type, pos);
+                foreach (var gridPos in positions)
+                    Field.grid[gridPos.x, gridPos.y] = new GameObject("TempBlock").transform;
+                spawned++;
+                if (spawned >= count) break;
+            }
+        }
 
         if (spawned < count)
             Debug.LogWarning("Nicht genug Platz für alle Teile!");
@@ -92,6 +92,14 @@ public class ShapeSpawner : MonoBehaviour
         mover.shapeType = type;
         mover.randomShape = false;
         mover.lastValidPosition = shape.transform.position;
+
+        // Setze alle Blöcke auf den untersten Layer
+        foreach (Transform block in shape.transform)
+        {
+            var sr = block.GetComponent<SpriteRenderer>();
+            if (sr != null)
+                sr.sortingOrder = 0; // unterster Layer
+        }
     }
 
     List<Vector2Int> GetShapePositions(ShapeGroupMover.ShapeType type, Vector2Int origin)
@@ -109,15 +117,15 @@ public class ShapeSpawner : MonoBehaviour
     }
 
     bool IsValidPlacement(List<Vector2Int> positions)
-{
-    foreach (var pos in positions)
     {
-        // Prüfe: Ist die Position im Grid und frei?
-        if (!Field.IsInsideGrid(pos)) return false;
-        if (Field.grid[pos.x, pos.y] != null) return false;
+        foreach (var pos in positions)
+        {
+            // Prüfe: Ist die Position im Grid und frei?
+            if (!Field.IsInsideGrid(pos)) return false;
+            if (Field.grid[pos.x, pos.y] != null) return false;
+        }
+        return true;
     }
-    return true;
-}
 
     bool HasSpaceForAnotherShape()
     {

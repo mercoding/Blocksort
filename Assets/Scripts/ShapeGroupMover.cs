@@ -19,6 +19,8 @@ public class ShapeGroupMover : MonoBehaviour
     private Vector3 dragStartPosition;
     private Quaternion dragStartRotation;
     private int originalSortingOrder = 0;
+    private Vector2Int lastGridCell = new Vector2Int(int.MinValue, int.MinValue);
+
 
 
     void Start()
@@ -251,6 +253,7 @@ public class ShapeGroupMover : MonoBehaviour
         }
         */
 
+
     void OnMouseButtonMove()
     {
         if (Input.GetMouseButton(0) && isDragging)
@@ -258,56 +261,61 @@ public class ShapeGroupMover : MonoBehaviour
             Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             Vector2Int gridCell = Vector2Int.RoundToInt(Field.RoundToGrid(mouseWorldPos));
 
-            bool foundValid = false;
-            Quaternion validRotation = transform.rotation;
-            Vector3 validPosition = transform.position;
-
-            // Teste alle Rotationen und alle Blöcke des Shapes
-            // Im OnMouseButtonMove:
-            for (int rot = 0; rot < 4; rot++)
+            // Nur neu suchen, wenn die Maus auf eine andere Zelle zeigt
+            if (gridCell != lastGridCell)
             {
-                Quaternion testRot = Quaternion.Euler(0, 0, rot * 90);
+                lastGridCell = gridCell;
+
                 var relPositions = GetShapePositions(shapeType);
+                List<(Quaternion rot, Vector3 pos)> validOptions = new List<(Quaternion, Vector3)>();
 
-                // Drehe alle relativen Positionen entsprechend
-                List<Vector2Int> rotatedPositions = new List<Vector2Int>();
-                foreach (var rel in relPositions)
+                // Sammle alle gültigen Rotationen und Block-Offsets
+                for (int rot = 0; rot < 4; rot++)
                 {
-                    Vector2 rotated = Quaternion.Euler(0, 0, rot * 90) * (Vector2)rel;
-                    rotatedPositions.Add(Vector2Int.RoundToInt(rotated));
-                }
+                    Quaternion testRot = Quaternion.Euler(0, 0, rot * 90);
+                    List<Vector2Int> rotatedPositions = new List<Vector2Int>();
+                    foreach (var rel in relPositions)
+                        rotatedPositions.Add(Vector2Int.RoundToInt(testRot * (Vector2)rel));
 
-                // Sortiere die Blöcke nach y-Wert (z.B. für das unterste zuerst)
-                rotatedPositions.Sort((a, b) => a.y.CompareTo(b.y)); // Unterster Block zuerst
-
-                for (int i = 0; i < rotatedPositions.Count; i++)
-                {
-                    Vector2Int offset = gridCell - rotatedPositions[i];
-                    transform.rotation = testRot;
-                    transform.position = new Vector3(offset.x, offset.y, 0);
-                    SnapToGridVisualOnly();
-
-                    if (CanPlaceMovable())
+                    for (int i = 0; i < rotatedPositions.Count; i++)
                     {
-                        foundValid = true;
-                        validRotation = testRot;
-                        validPosition = transform.position;
-                        break;
+                        Vector2Int offset = gridCell - rotatedPositions[i];
+                        Vector3 testPos = new Vector3(offset.x, offset.y, 0);
+                        transform.rotation = testRot;
+                        transform.position = testPos;
+                        SnapToGridVisualOnly();
+
+                        if (CanPlaceMovable())
+                            validOptions.Add((testRot, testPos));
                     }
                 }
-                if (foundValid) break;
-            }
-            if (foundValid)
-            {
-                transform.rotation = validRotation;
-                transform.position = validPosition;
-                lastValidPosition = validPosition;
-                lastValidRotation = validRotation;
-            }
-            else
-            {
-                // Zeige das Teil an der Mausposition, aber ohne Rotation/Snap
-                transform.position = new Vector3(gridCell.x, gridCell.y, 0);
+
+                if (validOptions.Count > 0)
+                {
+                    // Auswahl anhand Maus-Offset innerhalb der Zelle
+                    Vector2 cellWorld = new Vector2(gridCell.x + 0.5f, gridCell.y + 0.5f);
+                    Vector2 mouseOffset = (Vector2)mouseWorldPos - cellWorld;
+
+                    int index = 0;
+                    if (validOptions.Count > 1)
+                    {
+                        // Beispiel: Umschalten nach Richtung
+                        if (Mathf.Abs(mouseOffset.x) > Mathf.Abs(mouseOffset.y))
+                            index = mouseOffset.x > 0 ? 1 : 0;
+                        else
+                            index = mouseOffset.y > 0 ? 2 : 0;
+                        index = Mathf.Clamp(index, 0, validOptions.Count - 1);
+                    }
+
+                    transform.rotation = validOptions[index].rot;
+                    transform.position = validOptions[index].pos;
+                    lastValidPosition = validOptions[index].pos;
+                    lastValidRotation = validOptions[index].rot;
+                }
+                else
+                {
+                    transform.position = new Vector3(gridCell.x, gridCell.y, 0);
+                }
             }
         }
     }
