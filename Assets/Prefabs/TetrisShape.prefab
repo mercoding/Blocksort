@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7088424846086456765}
   - component: {fileID: 1668787079574850921}
   - component: {fileID: 1466255101971171601}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: TetrisShape
   m_TagString: Untagged
   m_Icon: {fileID: 0}

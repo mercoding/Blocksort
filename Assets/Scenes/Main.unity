@@ -677,6 +677,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 262f6b79a93984b64b010792aab2703b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gridSquarePrefab: {fileID: 5985946968138502741, guid: 62cb496dbc04e47858b3108ec91d9900, type: 3}
   reserveEndY: 59
 --- !u!4 &1636846226
 Transform:
