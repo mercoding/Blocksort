@@ -34,8 +34,9 @@ public class PieceGhostCreator : MonoBehaviour
         // Halbtransparenz setzen
         foreach (var sr in ghostInstance.GetComponentsInChildren<SpriteRenderer>())
         {
+            sr.GetComponent<SpriteRenderer>().sprite = ghostInstance.GetComponent<ShapeGroupMover>().shapeSprites[7];
             Color c = sr.color;
-            sr.color = new Color(c.r, c.g, c.b, 0.3f);
+            sr.color = new Color(c.r, c.g, c.b, 0.75f);
         }
     }
 
