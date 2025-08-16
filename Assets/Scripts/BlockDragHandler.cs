@@ -14,7 +14,6 @@ public class BlockDragHandler : MonoBehaviour
     private int currentPivotChildIndex = 0;
     private GameObject ghostBlock;
     public Sprite ghostSprite; // Im Inspector zuweisen (z.B. halbtransparentes Ghost-Sprite)
-    public Material ghostMaterial; // Im Inspector zuweisen (z.B. halbtransparent)
     private Vector3 ghostTargetPosition;
     private Quaternion ghostTargetRotation;
     private bool ghostCanPlace;
@@ -134,6 +133,7 @@ public class BlockDragHandler : MonoBehaviour
             transform.rotation = ghostTargetRotation;
             BlockSnapper.Instance.MarkCells(transform, true);
             SaveCurrentGridCells();
+            BlockLineClearer.Instance.CheckAndClearFullRows();
         }
         else
         {

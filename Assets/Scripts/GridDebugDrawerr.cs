@@ -26,5 +26,27 @@ public class GridDebugDrawer : MonoBehaviour
             Vector3 end = new Vector3(gridOrigin.x + width * cellSize, gridOrigin.y + y * cellSize, 0);
             Gizmos.DrawLine(start, end);
         }
+
+        // --- Belegte Zellen farbig markieren ---
+        if (Application.isPlaying && BlockSnapper.Instance != null)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    if (BlockSnapper.Instance.IsCellOccupied(new Vector2Int(x, y)))
+                    {
+                        Gizmos.color = new Color(1f, 0.4f, 0.2f, 0.7f); // Orange-Rot, halbtransparent
+                        Vector3 center = new Vector3(
+                            gridOrigin.x + x * cellSize + cellSize / 2f,
+                            gridOrigin.y + y * cellSize + cellSize / 2f,
+                            0f
+                        );
+                        Gizmos.DrawCube(center, new Vector3(cellSize * 0.9f, cellSize * 0.9f, 0.01f));
+                    }
+                }
+            }
+            Gizmos.color = Color.gray; // Zurücksetzen für Linien
+        }
     }
 }
