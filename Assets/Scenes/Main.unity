@@ -128,6 +128,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 96874970}
+  - component: {fileID: 96874976}
+  - component: {fileID: 96874975}
+  - component: {fileID: 96874974}
+  - component: {fileID: 96874973}
+  - component: {fileID: 96874972}
+  - component: {fileID: 96874977}
   m_Layer: 0
   m_Name: Global
   m_TagString: Untagged
@@ -150,6 +156,95 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &96874972
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 96874969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0bc40af0fd3a04f6ba0f8bdb12c6ed68, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  snapper: {fileID: 96874973}
+--- !u!114 &96874973
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 96874969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c0c3381847ee44d4b4edb110a6e3418, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gridOrigin: {x: 0, y: 0}
+--- !u!114 &96874974
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 96874969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 262f6b79a93984b64b010792aab2703b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gridSquarePrefab: {fileID: 7647021286337774557, guid: 9bfba146335e1483b9fb068ccc346db1, type: 3}
+  reserveEndY: 9
+--- !u!114 &96874975
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 96874969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30132970ede864af5b1d44e3b69dab61, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  width: 10
+  height: 10
+  cellSize: 1
+  gridOrigin: {x: -0.5, y: -0.5}
+  showGridGizmos: 1
+--- !u!114 &96874976
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 96874969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9becd4a61d2b54da6ac266ee52c32fff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &96874977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 96874969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51dcfa2fba7a047a599ce8a1bbca3672, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tetrisPrefabs:
+  - {fileID: 8244494036433130091, guid: 2c6c7347caf8445539404ba68423036f, type: 3}
+  - {fileID: 7843537758547739260, guid: 7106f1f60a6494a3e89436f9117eb149, type: 3}
+  - {fileID: 2601351466818929682, guid: 07d86a12f0617442fb51cbb093b45dea, type: 3}
+  - {fileID: 3978895870453092707, guid: 8b46e2dfe518b44499c5173f7e56641c, type: 3}
+  - {fileID: 7178521839032019981, guid: 9318e091b05f34c2ba8c6dcf5c0fe9d0, type: 3}
+  shapeCount: 10
+  snapper: {fileID: 96874973}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -387,7 +482,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &698946088
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -419,6 +514,55 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &793348292
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 793348294}
+  - component: {fileID: 793348293}
+  m_Layer: 0
+  m_Name: Grid
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &793348293
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 793348292}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30132970ede864af5b1d44e3b69dab61, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  width: 10
+  height: 10
+  cellSize: 1
+  gridOrigin: {x: -0.5, y: -0.5}
+  showGridGizmos: 1
+--- !u!4 &793348294
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 793348292}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1636846224
 GameObject:
   m_ObjectHideFlags: 0
@@ -438,7 +582,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1636846225
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -493,9 +637,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c0c3381847ee44d4b4edb110a6e3418, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridWidth: 10
-  gridHeight: 20
-  cellSize: 1
   gridOrigin: {x: 0, y: 0}
 --- !u!114 &1636846229
 MonoBehaviour:
@@ -515,8 +656,6 @@ MonoBehaviour:
   - {fileID: 2601351466818929682, guid: 07d86a12f0617442fb51cbb093b45dea, type: 3}
   - {fileID: 3978895870453092707, guid: 8b46e2dfe518b44499c5173f7e56641c, type: 3}
   - {fileID: 7178521839032019981, guid: 9318e091b05f34c2ba8c6dcf5c0fe9d0, type: 3}
-  gridWidth: 10
-  gridHeight: 10
   shapeCount: 10
   snapper: {fileID: 1636846228}
 --- !u!1660057539 &9223372036854775807
@@ -528,3 +667,4 @@ SceneRoots:
   - {fileID: 96874970}
   - {fileID: 1636846226}
   - {fileID: 698946089}
+  - {fileID: 793348294}

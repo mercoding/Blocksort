@@ -17,10 +17,10 @@ public class BlockLineClearer : MonoBehaviour
         List<int> fullRows = new List<int>();
 
         // 1. Finde alle vollen Reihen
-        for (int y = 0; y < snapper.gridHeight; y++)
+        for (int y = 0; y < Grid.Instance.height; y++)
         {
             bool full = true;
-            for (int x = 0; x < snapper.gridWidth; x++)
+            for (int x = 0; x < Grid.Instance.width; x++)
             {
                 if (!snapper.IsCellOccupied(new Vector2Int(x, y)))
                 {
@@ -39,7 +39,7 @@ public class BlockLineClearer : MonoBehaviour
 
         foreach (int y in fullRows)
         {
-            for (int x = 0; x < snapper.gridWidth; x++)
+            for (int x = 0; x < Grid.Instance.width; x++)
             {
                 Vector2Int cell = new Vector2Int(x, y);
 

@@ -4,10 +4,11 @@ using System.Collections.Generic;
 public class Field : MonoBehaviour
 {
     public static Field Instance;
+    /*
     public static int width = 10;
     public static int height = 10; // sichtbar: 0–19, buffer: 20–39, vorrat: 40–59
     public static Transform[,] movableGrid = new Transform[10, 10];
-    public static Transform[,] grid = new Transform[10, 10];
+    public static Transform[,] grid = new Transform[10, 10];*/
     public GameObject gridSquarePrefab; // Im Inspector zuweisen!
 
 
@@ -33,7 +34,7 @@ public class Field : MonoBehaviour
     {
         for (int y = visibleStartY; y <= visibleEndY; y++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < Grid.Instance.width; x++)
             {
                 GameObject square = Instantiate(gridSquarePrefab, new Vector3(x, y, 1), Quaternion.identity, transform);
                 // Optional: Sprite oder Farbe anpassen

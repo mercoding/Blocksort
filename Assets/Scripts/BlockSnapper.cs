@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class BlockSnapper : MonoBehaviour
 {
+    /*
     [Header("Grid Einstellungen")]
     public int gridWidth = 10;
     public int gridHeight = 20;
@@ -9,14 +10,15 @@ public class BlockSnapper : MonoBehaviour
     public Vector2 gridOrigin = Vector2.zero; // linke untere Ecke in Weltkoordinaten
 
     // Speichert, ob eine Zelle belegt ist
-    private bool[,] grid;
+    private bool[,] grid;*/
 
+    public Vector2 gridOrigin = Vector2.zero;
     public static BlockSnapper Instance;
 
     private void Awake()
     {
         Instance = this;
-        grid = new bool[gridWidth, gridHeight];
+        //grid = new bool[gridWidth, gridHeight];
     }
 
     /// <summary>
@@ -36,9 +38,9 @@ public class BlockSnapper : MonoBehaviour
         Vector3 pivotOffset = pivotChild.position - block.position;
 
         // Alle möglichen Grid-Positionen testen (einfaches Beispiel: von unten nach oben)
-        for (int y = 0; y < gridHeight; y++)
+        for (int y = 0; y < Grid.Instance.height; y++)
         {
-            for (int x = 0; x < gridWidth; x++)
+            for (int x = 0; x < Grid.Instance.width; x++)
             {
                 if (IsPositionFree(block, x, y, pivotOffset))
                 {
@@ -70,7 +72,7 @@ public class BlockSnapper : MonoBehaviour
             Vector2Int cell = WorldToGrid(childWorldPos);
 
             if (!IsInsideGrid(cell)) return false;
-            if (grid[cell.x, cell.y]) return false;
+            if (Grid.Instance.grid[cell.x, cell.y]) return false;
         }
         return true;
     }
@@ -87,7 +89,7 @@ public class BlockSnapper : MonoBehaviour
             Vector2Int cell = WorldToGrid(childWorldPos);
             if (IsInsideGrid(cell))
             {
-                grid[cell.x, cell.y] = occupied;
+                Grid.Instance.grid[cell.x, cell.y] = occupied;
             }
         }
     }
@@ -98,8 +100,8 @@ public class BlockSnapper : MonoBehaviour
     public Vector3 GridToWorld(Vector2Int gridPos)
     {
         return new Vector3(
-            gridOrigin.x + gridPos.x * cellSize,
-            gridOrigin.y + gridPos.y * cellSize,
+            gridOrigin.x + gridPos.x * Grid.Instance.cellSize,
+            gridOrigin.y + gridPos.y * Grid.Instance.cellSize,
             0f
         );
     }
@@ -109,15 +111,15 @@ public class BlockSnapper : MonoBehaviour
     /// </summary>
     public Vector2Int WorldToGrid(Vector3 worldPos)
     {
-        int x = Mathf.RoundToInt((worldPos.x - gridOrigin.x) / cellSize);
-        int y = Mathf.RoundToInt((worldPos.y - gridOrigin.y) / cellSize);
+        int x = Mathf.RoundToInt((worldPos.x - gridOrigin.x) / Grid.Instance.cellSize);
+        int y = Mathf.RoundToInt((worldPos.y - gridOrigin.y) / Grid.Instance.cellSize);
         return new Vector2Int(x, y);
     }
 
     public bool IsInsideGrid(Vector2Int cell)
     {
-        return cell.x >= 0 && cell.x < gridWidth &&
-               cell.y >= 0 && cell.y < gridHeight;
+        return cell.x >= 0 && cell.x < Grid.Instance.width &&
+               cell.y >= 0 && cell.y < Grid.Instance.height;
     }
 
     // Add this method to your BlockSnapper class
@@ -132,17 +134,17 @@ public class BlockSnapper : MonoBehaviour
     public bool IsCellOccupied(Vector2Int cell)
     {
         if (!IsInsideGrid(cell)) return true; // Zellen außerhalb gelten als belegt
-        return grid[cell.x, cell.y];
+        return Grid.Instance.grid[cell.x, cell.y];
     }
 
     public void SetCellOccupied(Vector2Int cell, bool occupied)
     {
         if (IsInsideGrid(cell))
-            grid[cell.x, cell.y] = occupied;
+            Grid.Instance.grid[cell.x, cell.y] = occupied;
     }
 
     public void ResetGrid()
     {
-        grid = new bool[gridWidth, gridHeight];
+        Grid.Instance.grid = new bool[Grid.Instance.width, Grid.Instance.height];
     }
 }

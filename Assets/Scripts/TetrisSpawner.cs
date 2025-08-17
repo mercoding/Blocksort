@@ -14,7 +14,7 @@ public class TetrisSpawner : MonoBehaviour
 
     public void SpawnRandomTetrisBlock()
     {
-        int spawnX = snapper.gridWidth / 2;
+        int spawnX = Grid.Instance.width / 2;
         GameObject prefab = tetrisPrefabs[Random.Range(0, tetrisPrefabs.Length)];
 
         // Zufällige Rotation (0, 90, 180, 270 Grad)

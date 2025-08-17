@@ -11,14 +11,14 @@ public class GridDebugDrawerUnique : MonoBehaviour
         if (BlockSnapper.Instance == null) return;
         var snapper = BlockSnapper.Instance;
 
-        for (int x = 0; x < snapper.gridWidth; x++)
+        for (int x = 0; x < Grid.Instance.width; x++)
         {
-            for (int y = 0; y < snapper.gridHeight; y++)
+            for (int y = 0; y < Grid.Instance.height; y++)
             {
                 // Hole die linke untere Ecke der Zelle
-                Vector3 cellOrigin = snapper.gridOrigin + new Vector2(x * snapper.cellSize, y * snapper.cellSize);
-                Vector3 size = new Vector3(snapper.cellSize, snapper.cellSize, 0.01f);
-                Vector3 center = cellOrigin + new Vector3(snapper.cellSize, snapper.cellSize, 0) * 0.5f;
+                Vector3 cellOrigin = Grid.Instance.gridOrigin + new Vector2(x * Grid.Instance.cellSize, y * Grid.Instance.cellSize);
+                Vector3 size = new Vector3(Grid.Instance.cellSize, Grid.Instance.cellSize, 0.01f);
+                Vector3 center = cellOrigin + new Vector3(Grid.Instance.cellSize, Grid.Instance.cellSize, 0) * 0.5f;
 
                 // Fülle belegte Zellen
                 if (snapper.IsCellOccupied(new Vector2Int(x, y)))

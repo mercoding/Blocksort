@@ -4,16 +4,12 @@ using System.Collections.Generic;
 public class TetrisPuzzleSpawner : MonoBehaviour
 {
     public GameObject[] tetrisPrefabs; // Prefabs für alle Tetris-Formen (Parent + 4 Blöcke als Childs)
-    public int gridWidth = 10;
-    public int gridHeight = 10;
     public int shapeCount = 10;
     public BlockSnapper snapper;
 
     void Start()
     {
         if (snapper == null) snapper = BlockSnapper.Instance;
-        snapper.gridWidth = gridWidth;
-        snapper.gridHeight = gridHeight;
         snapper.ResetGrid();
 
         SpawnPuzzleShapes();
@@ -33,8 +29,8 @@ public class TetrisPuzzleSpawner : MonoBehaviour
             Quaternion rotation = Quaternion.Euler(0, 0, rotSteps * 90);
 
             // Versuche zufällige Position im Grid
-            int x = Random.Range(0, gridWidth);
-            int y = Random.Range(0, gridHeight);
+            int x = Random.Range(0, Grid.Instance.width);
+            int y = Random.Range(0, Grid.Instance.height);
             Vector3 spawnPos = snapper.GridToWorld(new Vector2Int(x, y));
             GameObject block = Instantiate(prefab, spawnPos, rotation);
 

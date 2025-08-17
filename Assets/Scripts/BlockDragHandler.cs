@@ -235,9 +235,9 @@ public class BlockDragHandler : MonoBehaviour
             Quaternion testRot = Quaternion.Euler(0, 0, rotStep * 90);
             ghostBlock.transform.rotation = testRot;
 
-            for (int x = 0; x < BlockSnapper.Instance.gridWidth; x++)
+            for (int x = 0; x < Grid.Instance.width; x++)
             {
-                for (int y = 0; y < BlockSnapper.Instance.gridHeight; y++)
+                for (int y = 0; y < Grid.Instance.height; y++)
                 {
                     Vector2Int targetCell = new Vector2Int(x, y);
                     Vector3 targetWorldPos = BlockSnapper.Instance.GridToWorld(targetCell);
