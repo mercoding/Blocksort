@@ -20,6 +20,7 @@ public class TetrisPuzzleSpawner : MonoBehaviour
         int spawned = 0;
         int maxTries = 1000;
         int tries = 0;
+        int nextGroupID = 1; // ID-Zähler für Blockgruppen
 
         while (spawned < shapeCount && tries < maxTries)
         {
@@ -36,8 +37,23 @@ public class TetrisPuzzleSpawner : MonoBehaviour
 
             if (CanPlace(block.transform, snapper))
             {
+                // BlockGroupID vergeben
+                var groupIDComp = block.AddComponent<BlockGroupID>();
+                groupIDComp.groupID = nextGroupID;
+
+                // Optional: Auch an alle Kinder vergeben (falls gewünscht)
+                /*
+                foreach (Transform child in block.transform)
+                {
+                    var childID = child.gameObject.GetComponent<BlockGroupID>();
+                    if (childID == null)
+                        childID = child.gameObject.AddComponent<BlockGroupID>();
+                    childID.groupID = nextGroupID;
+                }*/
+
                 snapper.MarkCells(block.transform, true);
                 spawned++;
+                nextGroupID++;
             }
             else
             {

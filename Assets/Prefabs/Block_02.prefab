@@ -10,9 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 7114865526169280682}
   - component: {fileID: 2075384023223073585}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square (0)
-  m_TagString: Untagged
+  m_TagString: BlockChild
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -97,9 +97,9 @@ GameObject:
   m_Component:
   - component: {fileID: 234298742329253413}
   - component: {fileID: 1346725960800586816}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square (2)
-  m_TagString: Untagged
+  m_TagString: BlockChild
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -113,7 +113,7 @@ Transform:
   m_GameObject: {fileID: 2637318779900255173}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
+  m_LocalPosition: {x: 2, y: 0, z: 0}
   m_LocalScale: {x: 0.25, y: 0.25, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -184,9 +184,9 @@ GameObject:
   m_Component:
   - component: {fileID: 8274550486420876037}
   - component: {fileID: 3409687102980612683}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square (3)
-  m_TagString: Untagged
+  m_TagString: BlockChild
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -200,7 +200,7 @@ Transform:
   m_GameObject: {fileID: 5168859180247973613}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 3, z: 0}
+  m_LocalPosition: {x: 3, y: 0, z: 0}
   m_LocalScale: {x: 0.25, y: 0.25, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -271,6 +271,8 @@ GameObject:
   m_Component:
   - component: {fileID: 3169220275927879276}
   - component: {fileID: -8878548148986629343}
+  - component: {fileID: -7617281693877759126}
+  - component: {fileID: -8745858599806713297}
   m_Layer: 0
   m_Name: Block_02
   m_TagString: Untagged
@@ -310,7 +312,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ghostSprite: {fileID: 21300000, guid: eacf780d8cc908e4e814340733a2ebc0, type: 3}
-  ghostMaterial: {fileID: 0}
+--- !u!114 &-7617281693877759126
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7843537758547739260}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39346bbb753394bbda6263b587fca216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shapeType: 0
+--- !u!114 &-8745858599806713297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7843537758547739260}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93498f1c23cf649b2b3079d081423cbe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &9092652428600415018
 GameObject:
   m_ObjectHideFlags: 0
@@ -321,9 +347,9 @@ GameObject:
   m_Component:
   - component: {fileID: 944684875591561602}
   - component: {fileID: 2361307608203530419}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square (1)
-  m_TagString: Untagged
+  m_TagString: BlockChild
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -337,7 +363,7 @@ Transform:
   m_GameObject: {fileID: 9092652428600415018}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalPosition: {x: 1, y: 0, z: 0}
   m_LocalScale: {x: 0.25, y: 0.25, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
