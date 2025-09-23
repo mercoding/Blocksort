@@ -21,6 +21,7 @@ public class BlockSnapper : MonoBehaviour
         //grid = new bool[gridWidth, gridHeight];
     }
 
+
     /// <summary>
     /// Versucht den Block an die nächste freie Grid-Position zu setzen.
     /// pivotChildIndex ist der Index des Childs, das als Referenzzelle dient.

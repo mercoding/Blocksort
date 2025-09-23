@@ -1,11 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
 
 
 public class BlockDragHandler : MonoBehaviour
 {
     private Vector3 dragOffset;
-    private bool isDragging = false;
+    public bool isDragging = false;
     private int pivotChildIndex = 0; // Index des Pivot-Blocks (z.B. 0 für das erste Kind)
     private Vector3 lastValidPosition;
     private Quaternion lastValidRotation;
@@ -23,18 +24,39 @@ public class BlockDragHandler : MonoBehaviour
     private float swipeThreshold = 20f; // Pixel, nach denen eine Drehung ausgelöst wird
     private bool canRotate = true;
 
+    public static bool DragLock = false;
+
     private void Start()
     {
         SaveCurrentGridCells();
-
         BlockSnapper.Instance.MarkCells(transform, true);
         AdjustCollider();
     }
 
+    void Update()
+    {
+        // Wenn das Parent keine Kinder mehr hat oder nicht mehr "Block" ist, Drag sofort beenden!
+        if (isDragging && (transform.childCount == 0 || !CompareTag("Block")))
+        {
+            isDragging = false;
+            if (ghostBlock != null) Destroy(ghostBlock);
+            if (startGhostBlock != null) Destroy(startGhostBlock);
+            DestroyImmediate(gameObject);
+            return;
+        }
+    }
 
+    void LateUpdate()
+    {
+        //BlockLineClearer.Instance.RebuildGridFromScene();
+        //BlockLineClearer.Instance.SplitDisconnectedBlocksByGroupID();
+        
+    }
 
     private void OnMouseDown()
     {
+        if (BlockDragHandler.DragLock) return;
+        //BlockLineClearer.Instance.RebuildGridFromScene();
         if (startGhostBlock != null)
         {
             Destroy(startGhostBlock);
@@ -73,6 +95,8 @@ public class BlockDragHandler : MonoBehaviour
             sr.sprite = ghostSprite;
         startGhostBlock.name = gameObject.name + "_StartGhost";
         startGhostBlock.layer = LayerMask.NameToLayer("Ignore Raycast");
+        startGhostBlock.tag = "Ghost"; // <--- Tag auf Parent setzen!
+
         //foreach (var sr in startGhostBlock.GetComponentsInChildren<SpriteRenderer>())
         //  sr.color = new Color(0.5f, 0.5f, 1f, 0.2f); // z.B. bläulicher Schatten
         lastMouseX = Input.mousePosition.x;
@@ -131,9 +155,23 @@ public class BlockDragHandler : MonoBehaviour
             // Setze Block exakt auf Ghost-Position und -Rotation!
             transform.position = ghostTargetPosition;
             transform.rotation = ghostTargetRotation;
+            //BlockSnapper.Instance.MarkCells(transform, true);
+            //SaveCurrentGridCells();
+            //BlockLineClearer.Instance.CheckAndClearFullRows();
+
+            //BlockLineClearer.Instance.RemoveFullRowBlocks();
+            //BlockLineClearer.Instance.SplitDisconnectedBlocksByGroupID();
+            foreach (var ghost in GameObject.FindGameObjectsWithTag("Ghost"))
+                Destroy(ghost);
+
             BlockSnapper.Instance.MarkCells(transform, true);
             SaveCurrentGridCells();
-            BlockLineClearer.Instance.CheckAndClearFullRows();
+            //Global.Instance.EndTurn();
+            // Sperre Drag für einen Frame, damit kein neuer Drag sofort gestartet werden kann
+            //StartCoroutine(BlockLineClearer.Instance.UnlockDragNextFrame());
+
+            //Global.Instance.moved = true;
+            //BlockLineClearer.Instance.SplitDisconnectedBlocksByGroupID();
         }
         else
         {
@@ -142,6 +180,8 @@ public class BlockDragHandler : MonoBehaviour
             transform.rotation = lastValidRotation;
             MarkOldCellsAsOccupied();
         }
+        //BlockLineClearer.Instance.RebuildGridFromScene();
+        Global.Instance.EndTurn();
     }
 
     private void SaveCurrentGridCells()
@@ -173,8 +213,14 @@ public class BlockDragHandler : MonoBehaviour
 
     void AdjustCollider()
     {
+        if(transform.childCount == 0)
+        {
+            var existing = GetComponent<BoxCollider2D>();
+            if (existing != null) DestroyImmediate(existing);
+            return;
+        }
         var squares = GetComponentsInChildren<Transform>();
-        if (squares.Length <= 1) return; // Nur das Parent-Objekt
+        if (transform == null || squares.Length <= 1) return; // Nur das Parent-Objekt
 
         // Initialisiere min/max mit erstem Square
         Vector3 min = squares[1].localPosition;
@@ -211,11 +257,16 @@ public class BlockDragHandler : MonoBehaviour
         foreach (var sr in ghostBlock.GetComponentsInChildren<SpriteRenderer>())
         {
             sr.sprite = ghostSprite;
-            sr.color = new Color(1, 1, 1, 0.7f); // Gut sichtbare Transparenz
+            sr.color = new Color(1, 1, 1, 0.7f);
         }
 
         ghostBlock.name = gameObject.name + "_Ghost";
         ghostBlock.layer = LayerMask.NameToLayer("Ignore Raycast");
+        ghostBlock.tag = "Ghost"; // <--- Tag auf Parent setzen!
+
+        // Optional: Auch alle Kinder taggen, falls nötig
+        foreach (Transform child in ghostBlock.transform)
+            child.tag = "Ghost";
     }
 
     private void UpdateGhostBlock()
@@ -289,5 +340,20 @@ public class BlockDragHandler : MonoBehaviour
 
         transform.position = bestPos;
         transform.rotation = bestRot;
+    }
+
+    private IEnumerator UnlockDragNextFrame()
+    {
+        BlockDragHandler.DragLock = true;
+        yield return null; // Einen Frame warten
+        BlockDragHandler.DragLock = false;
+        //BlockLineClearer.Instance.RebuildGridFromScene();
+    }
+
+    public void ForceMouseUp()
+    {
+        isDragging = false;
+        if (ghostBlock != null) Destroy(ghostBlock);
+        if (startGhostBlock != null) Destroy(startGhostBlock);
     }
 }

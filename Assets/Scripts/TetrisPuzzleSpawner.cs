@@ -6,12 +6,17 @@ public class TetrisPuzzleSpawner : MonoBehaviour
     public GameObject[] tetrisPrefabs; // Prefabs für alle Tetris-Formen (Parent + 4 Blöcke als Childs)
     public int shapeCount = 10;
     public BlockSnapper snapper;
+    public static int nextGroupID = 1; // ID-Zähler für Blockgruppen
+    public static TetrisPuzzleSpawner Instance;
 
-    void Start()
+    void Awake()
     {
+        Instance = this;
         if (snapper == null) snapper = BlockSnapper.Instance;
         snapper.ResetGrid();
-
+    }
+    void Start()
+    {
         SpawnPuzzleShapes();
     }
 
@@ -20,7 +25,7 @@ public class TetrisPuzzleSpawner : MonoBehaviour
         int spawned = 0;
         int maxTries = 1000;
         int tries = 0;
-        int nextGroupID = 1; // ID-Zähler für Blockgruppen
+        //int nextGroupID = 1; // ID-Zähler für Blockgruppen
 
         while (spawned < shapeCount && tries < maxTries)
         {

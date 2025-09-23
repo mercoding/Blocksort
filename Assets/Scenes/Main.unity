@@ -163,6 +163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9becd4a61d2b54da6ac266ee52c32fff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  moved: 0
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -449,6 +450,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   snapper: {fileID: 793348297}
+  fullRows: 
+  deletedCells: []
+  updated: 0
+  ghostSprite: {fileID: 21300000, guid: eacf780d8cc908e4e814340733a2ebc0, type: 3}
 --- !u!114 &793348296
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 3
   tags:
   - BlockChild
+  - Block
+  - Ghost
   layers:
   - Default
   - TransparentFX

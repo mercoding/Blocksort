@@ -359,10 +359,9 @@ GameObject:
   - component: {fileID: 6836610896919027341}
   - component: {fileID: -1766775713872033261}
   - component: {fileID: -2236191020594021820}
-  - component: {fileID: -1385411673072505677}
   m_Layer: 0
   m_Name: Block_05
-  m_TagString: Untagged
+  m_TagString: Block
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -398,6 +397,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e15040cd4539147269e249e36dfdf825, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isDragging: 0
   ghostSprite: {fileID: 21300000, guid: eacf780d8cc908e4e814340733a2ebc0, type: 3}
 --- !u!114 &-2236191020594021820
 MonoBehaviour:
@@ -412,15 +412,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   shapeType: 1
---- !u!114 &-1385411673072505677
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7178521839032019981}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 93498f1c23cf649b2b3079d081423cbe, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
