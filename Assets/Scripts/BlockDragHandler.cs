@@ -211,7 +211,7 @@ public class BlockDragHandler : MonoBehaviour
         return Camera.main.ScreenToWorldPoint(mouseScreen);
     }
 
-    void AdjustCollider()
+    public void AdjustCollider()
     {
         if(transform.childCount == 0)
         {

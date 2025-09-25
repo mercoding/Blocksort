@@ -11,6 +11,8 @@ public class BlockLineClearer : MonoBehaviour
     public List<int> fullRows = new List<int>(); // Muss von außen gesetzt werden!
     public List<Vector2Int> deletedCells = new List<Vector2Int>();
     public bool updated = false;
+    public int visibleHeight = 16; // z.B. 16 sichtbare Reihen, 4 als Spawn
+
 
     public Sprite ghostSprite;
 
@@ -41,6 +43,7 @@ public class BlockLineClearer : MonoBehaviour
         {
             foreach (Transform child in parent.transform)
             {
+                if(child.parent != null) child.parent.GetComponent<BlockDragHandler>().AdjustCollider();
                 if (!child.CompareTag("BlockChild")) continue;
                 Vector2Int cell = snapper.WorldToGrid(child.position);
                 if (snapper.IsInsideGrid(cell))
@@ -49,6 +52,159 @@ public class BlockLineClearer : MonoBehaviour
         }
     }
 
+
+
+    public void DropAllBlocksAsFarAsPossible()
+    {
+        int width = Grid.Instance.width;
+        int height = Grid.Instance.height;
+
+        var allParents = GameObject.FindGameObjectsWithTag("Block");
+        foreach (var parent in allParents)
+        {
+            List<Transform> children = new List<Transform>();
+            foreach (Transform child in parent.transform)
+            {
+                if (!child.CompareTag("BlockChild")) continue;
+                children.Add(child);
+            }
+            if (children.Count == 0) continue;
+
+            // Für jedes Kind: Wie weit kann es maximal nach unten rutschen?
+            int maxDrop = int.MaxValue;
+            foreach (var child in children)
+            {
+                Vector2Int cell = snapper.WorldToGrid(child.position);
+                int drop = 0;
+                for (int y = cell.y - 1; y >= 0; y--)
+                {
+                    if (snapper.IsCellOccupied(new Vector2Int(cell.x, y)))
+                        break;
+                    drop++;
+                }
+                maxDrop = Mathf.Min(maxDrop, drop);
+            }
+
+            if (maxDrop > 0)
+            {
+                foreach (var child in children)
+                {
+                    child.position += new Vector3(0, -maxDrop * Grid.Instance.cellSize, 0);
+                }
+                // Collider ggf. anpassen
+                var handler = parent.GetComponent<BlockDragHandler>();
+                if (handler != null)
+                    handler.AdjustCollider();
+            }
+        }
+    }
+
+
+
+    public void DropOnlyFittingInvisibleBlocksByFreeRowsOnTop()
+    {
+        int width = Grid.Instance.width;
+        int height = Grid.Instance.height;
+        int freeRowsOnTop = 0;
+        for (int y = visibleHeight - 1; y >= 0; y--)
+        {
+            bool rowFree = true;
+            for (int x = 0; x < width; x++)
+            {
+                if (snapper.IsCellOccupied(new Vector2Int(x, y)))
+                {
+                    rowFree = false;
+                    break;
+                }
+            }
+            if (rowFree)
+                freeRowsOnTop++;
+            else
+                break;
+        }
+
+        if (freeRowsOnTop == 0)
+            return;
+
+        var allParents = GameObject.FindGameObjectsWithTag("Block");
+        foreach (var parent in allParents)
+        {
+            bool canDrop = true;
+            foreach (Transform child in parent.transform)
+            {
+                if (!child.CompareTag("BlockChild")) continue;
+                Vector2Int cell = snapper.WorldToGrid(child.position);
+                int targetY = cell.y - freeRowsOnTop;
+                if (targetY < 0 || targetY >= visibleHeight)
+                {
+                    canDrop = false;
+                    break;
+                }
+            }
+
+            if (canDrop)
+            {
+                foreach (Transform child in parent.transform)
+                {
+                    if (!child.CompareTag("BlockChild")) continue;
+                    child.position += new Vector3(0, -freeRowsOnTop * Grid.Instance.cellSize, 0);
+                }
+                // Collider ggf. anpassen
+                var handler = parent.GetComponent<BlockDragHandler>();
+                if (handler != null)
+                    handler.AdjustCollider();
+            }
+        }
+    }
+
+
+
+    public void DropInvisibleBlocksByFreeRowsOnTop()
+    {
+        int width = Grid.Instance.width;
+        int height = Grid.Instance.height;
+
+        // Zähle, wie viele Reihen im sichtbaren Grid (y = visibleHeight-1 bis y = 0) komplett frei sind (von oben nach unten)
+        int freeRowsOnTop = 0;
+        for (int y = visibleHeight - 1; y >= 0; y--)
+        {
+            bool rowFree = true;
+            for (int x = 0; x < width; x++)
+            {
+                if (snapper.IsCellOccupied(new Vector2Int(x, y)))
+                {
+                    rowFree = false;
+                    break;
+                }
+            }
+            if (rowFree)
+                freeRowsOnTop++;
+            else
+                break; // Nur zusammenhängende freie Reihen ganz oben zählen!
+        }
+
+        if (freeRowsOnTop == 0)
+            return;
+
+        // Verschiebe alle Block-Kinder im unsichtbaren Bereich (y >= visibleHeight) um freeRowsOnTop nach unten
+        var allBlocks = FindObjectsByType<Transform>(FindObjectsSortMode.None);
+        foreach (var t in allBlocks)
+        {
+            if (t.parent == null) continue;
+            if (!t.CompareTag("BlockChild")) continue;
+
+            Vector2Int cell = snapper.WorldToGrid(t.position);
+            if (cell.y >= visibleHeight)
+            {
+                t.position += new Vector3(0, -freeRowsOnTop * Grid.Instance.cellSize, 0);
+            }
+
+            if (t.parent.GetComponent<BlockDragHandler>() != null)
+            {
+                t.parent.GetComponent<BlockDragHandler>().AdjustCollider();
+            }
+        }
+    }
 
 
     public void RemoveFullRowBlocks()
@@ -63,7 +219,7 @@ public class BlockLineClearer : MonoBehaviour
     private List<int> FindFullRows()
     {
         int width = Grid.Instance.width;
-        int height = Grid.Instance.height;
+        int height = visibleHeight; // Nur sichtbares Grid prüfen
         var snapper = BlockSnapper.Instance;
         List<int> fullRows = new List<int>();
 
@@ -122,66 +278,66 @@ public class BlockLineClearer : MonoBehaviour
 
 
 
-/*
-    public void RemoveFullRowBlocks()
-    {
-        int width = Grid.Instance.width;
-        int height = Grid.Instance.height;
-        var snapper = BlockSnapper.Instance;
-
-        // 1. Finde alle vollen Reihen
-        List<int> fullRows = new List<int>();
-        for (int y = 0; y < height; y++)
+    /*
+        public void RemoveFullRowBlocks()
         {
-            bool full = true;
-            for (int x = 0; x < width; x++)
+            int width = Grid.Instance.width;
+            int height = Grid.Instance.height;
+            var snapper = BlockSnapper.Instance;
+
+            // 1. Finde alle vollen Reihen
+            List<int> fullRows = new List<int>();
+            for (int y = 0; y < height; y++)
             {
-                if (!snapper.IsCellOccupied(new Vector2Int(x, y)))
+                bool full = true;
+                for (int x = 0; x < width; x++)
                 {
-                    full = false;
-                    break;
+                    if (!snapper.IsCellOccupied(new Vector2Int(x, y)))
+                    {
+                        full = false;
+                        break;
+                    }
+                }
+                if (full)
+                    fullRows.Add(y);
+            }
+
+            if (fullRows.Count == 0) return;
+
+            // 2. Sammle alle Kinder, die in einer vollen Reihe liegen, und deren Parents
+            var allBlocks = FindObjectsByType<Transform>(FindObjectsSortMode.None);
+            HashSet<Transform> parentsToCheck = new HashSet<Transform>();
+
+            foreach (var t in allBlocks)
+            {
+                if (t.parent == null) continue;
+                if (t.parent.GetComponent<BlockDragHandler>() == null) continue;
+
+                Vector2Int tCell = snapper.WorldToGrid(t.position);
+                if (fullRows.Contains(tCell.y))
+                {
+                    // Austragen aus Parent-Grid, falls vorhanden
+                    var groupGrid = t.parent.GetComponent<BlockGroupGrid>();
+                    if (groupGrid != null)
+                    {
+                        Vector3 localPos = t.parent.InverseTransformPoint(t.position);
+                        int x = Mathf.RoundToInt(localPos.x);
+                        int y = Mathf.RoundToInt(localPos.y);
+                        if (x >= 0 && x < groupGrid.grid.GetLength(0) && y >= 0 && y < groupGrid.grid.GetLength(1))
+                            groupGrid.grid[x, y] = false;
+                    }
+
+                    // Austragen aus globalem Grid
+                    snapper.SetCellOccupied(tCell, false);
+
+                    // Parent merken
+                    parentsToCheck.Add(t.parent);
+                    // Kind sofort löschen
+                    DestroyImmediate(t.gameObject);
+
                 }
             }
-            if (full)
-                fullRows.Add(y);
-        }
-
-        if (fullRows.Count == 0) return;
-
-        // 2. Sammle alle Kinder, die in einer vollen Reihe liegen, und deren Parents
-        var allBlocks = FindObjectsByType<Transform>(FindObjectsSortMode.None);
-        HashSet<Transform> parentsToCheck = new HashSet<Transform>();
-
-        foreach (var t in allBlocks)
-        {
-            if (t.parent == null) continue;
-            if (t.parent.GetComponent<BlockDragHandler>() == null) continue;
-
-            Vector2Int tCell = snapper.WorldToGrid(t.position);
-            if (fullRows.Contains(tCell.y))
-            {
-                // Austragen aus Parent-Grid, falls vorhanden
-                var groupGrid = t.parent.GetComponent<BlockGroupGrid>();
-                if (groupGrid != null)
-                {
-                    Vector3 localPos = t.parent.InverseTransformPoint(t.position);
-                    int x = Mathf.RoundToInt(localPos.x);
-                    int y = Mathf.RoundToInt(localPos.y);
-                    if (x >= 0 && x < groupGrid.grid.GetLength(0) && y >= 0 && y < groupGrid.grid.GetLength(1))
-                        groupGrid.grid[x, y] = false;
-                }
-
-                // Austragen aus globalem Grid
-                snapper.SetCellOccupied(tCell, false);
-
-                // Parent merken
-                parentsToCheck.Add(t.parent);
-                // Kind sofort löschen
-                DestroyImmediate(t.gameObject);
-
-            }
-        }
-    }*/
+        }*/
 
     public int GetNextGroupID()
     {
@@ -304,6 +460,28 @@ public class BlockLineClearer : MonoBehaviour
             {
                 child.SetParent(newParent.transform, true);
                 child.tag = "BlockChild";
+            }
+        }
+    }
+
+
+    public void DropBlocksAfterLineClear(List<int> clearedRows)
+    {
+        clearedRows.Sort(); // Von unten nach oben!
+        foreach (int clearedY in clearedRows)
+        {
+            var allBlocks = FindObjectsByType<Transform>(FindObjectsSortMode.None);
+            foreach (var t in allBlocks)
+            {
+                if (t.parent == null) continue;
+                if (!t.CompareTag("BlockChild")) continue;
+
+                Vector2Int cell = BlockSnapper.Instance.WorldToGrid(t.position);
+                if (cell.y > clearedY)
+                {
+                    // Nach unten verschieben
+                    t.position += new Vector3(0, -Grid.Instance.cellSize, 0);
+                }
             }
         }
     }

@@ -29,7 +29,16 @@ public class Global : MonoBehaviour
     {
         BlockLineClearer.Instance.RemoveFullRowBlocks();
         BlockLineClearer.Instance.SplitDisconnectedBlocksByGroupID();
+        BlockDropper.Instance.DropBlocksFromUpperGrid();
+
+        BlockLineClearer.Instance.DropInvisibleBlocksByFreeRowsOnTop();
+        //BlockLineClearer.Instance.DropAllBlocksAsFarAsPossible();
+        //BlockDropper.Instance.DropAllBlocksAsFarAsPossible();
+
         BlockLineClearer.Instance.RebuildGridFromScene();
+
+        TetrisPuzzleSpawner.Instance.SpawnIfUpperInvisibleGridFree(BlockLineClearer.Instance.visibleHeight);
+
         //Debug.Log("Turn Ended");
     }
 }

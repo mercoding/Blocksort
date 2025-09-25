@@ -267,7 +267,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 2000
   field of view: 34
   orthographic: 1
   orthographic size: 5
@@ -398,6 +398,7 @@ GameObject:
   - component: {fileID: 793348297}
   - component: {fileID: 793348296}
   - component: {fileID: 793348295}
+  - component: {fileID: 793348298}
   m_Layer: 0
   m_Name: Grid
   m_TagString: Untagged
@@ -418,7 +419,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   width: 10
-  height: 10
+  height: 21
   cellSize: 1
   gridOrigin: {x: -0.5, y: -0.5}
   showGridGizmos: 1
@@ -453,6 +454,7 @@ MonoBehaviour:
   fullRows: 
   deletedCells: []
   updated: 0
+  visibleHeight: 10
   ghostSprite: {fileID: 21300000, guid: eacf780d8cc908e4e814340733a2ebc0, type: 3}
 --- !u!114 &793348296
 MonoBehaviour:
@@ -472,8 +474,11 @@ MonoBehaviour:
   - {fileID: 2601351466818929682, guid: 07d86a12f0617442fb51cbb093b45dea, type: 3}
   - {fileID: 3978895870453092707, guid: 8b46e2dfe518b44499c5173f7e56641c, type: 3}
   - {fileID: 7178521839032019981, guid: 9318e091b05f34c2ba8c6dcf5c0fe9d0, type: 3}
-  shapeCount: 10
+  - {fileID: 7178521839032019981, guid: dd6b464863d954188b9960262bea51b2, type: 3}
+  - {fileID: 7178521839032019981, guid: 8ff01615fe3934bcdbdc6ae1c20c58c1, type: 3}
+  shapeCount: 30
   snapper: {fileID: 793348297}
+  visibleHeight: 10
 --- !u!114 &793348297
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -487,6 +492,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gridOrigin: {x: 0, y: 0}
+--- !u!114 &793348298
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 793348292}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b66fa7085531047bdbc859d86630814b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dropCheckStartY: 11
+  visibleHeight: 10
+  snapper: {fileID: 793348297}
 --- !u!1 &1636846224
 GameObject:
   m_ObjectHideFlags: 0

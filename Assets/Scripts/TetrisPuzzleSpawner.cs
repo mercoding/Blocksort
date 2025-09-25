@@ -4,10 +4,12 @@ using System.Collections.Generic;
 public class TetrisPuzzleSpawner : MonoBehaviour
 {
     public GameObject[] tetrisPrefabs; // Prefabs für alle Tetris-Formen (Parent + 4 Blöcke als Childs)
-    public int shapeCount = 10;
+    public int shapeCount = 15;
     public BlockSnapper snapper;
     public static int nextGroupID = 1; // ID-Zähler für Blockgruppen
     public static TetrisPuzzleSpawner Instance;
+    public int visibleHeight = 10; // Setze dies im Inspector oder Code passend!
+
 
     void Awake()
     {
@@ -18,14 +20,19 @@ public class TetrisPuzzleSpawner : MonoBehaviour
     void Start()
     {
         SpawnPuzzleShapes();
+        SpawnPuzzleShapesOnTop();
     }
 
-    public void SpawnPuzzleShapes()
+
+
+    public void SpawnPuzzleShapesOnTop()
     {
         int spawned = 0;
         int maxTries = 1000;
         int tries = 0;
-        //int nextGroupID = 1; // ID-Zähler für Blockgruppen
+
+        int height = Grid.Instance.height;
+        int width = Grid.Instance.width;
 
         while (spawned < shapeCount && tries < maxTries)
         {
@@ -34,27 +41,16 @@ public class TetrisPuzzleSpawner : MonoBehaviour
             int rotSteps = Random.Range(0, 4);
             Quaternion rotation = Quaternion.Euler(0, 0, rotSteps * 90);
 
-            // Versuche zufällige Position im Grid
-            int x = Random.Range(0, Grid.Instance.width);
-            int y = Random.Range(0, Grid.Instance.height);
+            // Spawn NUR im oberen unsichtbaren Bereich!
+            int x = Random.Range(0, width);
+            int y = Random.Range(visibleHeight, height); // Nur im unsichtbaren Bereich
             Vector3 spawnPos = snapper.GridToWorld(new Vector2Int(x, y));
             GameObject block = Instantiate(prefab, spawnPos, rotation);
 
             if (CanPlace(block.transform, snapper))
             {
-                // BlockGroupID vergeben
                 var groupIDComp = block.AddComponent<BlockGroupID>();
                 groupIDComp.groupID = nextGroupID;
-
-                // Optional: Auch an alle Kinder vergeben (falls gewünscht)
-                /*
-                foreach (Transform child in block.transform)
-                {
-                    var childID = child.gameObject.GetComponent<BlockGroupID>();
-                    if (childID == null)
-                        childID = child.gameObject.AddComponent<BlockGroupID>();
-                    childID.groupID = nextGroupID;
-                }*/
 
                 snapper.MarkCells(block.transform, true);
                 spawned++;
@@ -70,6 +66,203 @@ public class TetrisPuzzleSpawner : MonoBehaviour
             Debug.LogWarning("Nicht alle Shapes konnten platziert werden!");
     }
 
+    public void SpawnPuzzleShapes()
+    {
+        int spawned = 0;
+        int maxTries = 1000;
+        int tries = 0;
+
+        int width = Grid.Instance.width;
+        int height = Grid.Instance.height;
+
+        while (spawned < shapeCount && tries < maxTries)
+        {
+            tries++;
+            GameObject prefab = tetrisPrefabs[Random.Range(0, tetrisPrefabs.Length)];
+            int rotSteps = Random.Range(0, 4);
+            Quaternion rotation = Quaternion.Euler(0, 0, rotSteps * 90);
+
+            int x = Random.Range(0, width);
+            int y = Random.Range(0, height);
+            Vector3 spawnPos = snapper.GridToWorld(new Vector2Int(x, y));
+            GameObject block = Instantiate(prefab, spawnPos, rotation);
+
+            // Prüfe, ob ALLE Kinder im sichtbaren Bereich liegen
+            bool allInVisible = true;
+            foreach (Transform child in block.transform)
+            {
+                Vector3 childWorldPos = block.transform.position + block.transform.rotation * child.localPosition;
+                Vector2Int cell = snapper.WorldToGrid(childWorldPos);
+                if (cell.y < 0 || cell.y >= visibleHeight)
+                {
+                    allInVisible = false;
+                    break;
+                }
+            }
+
+            // Prüfe, ob durch diesen Block eine volle Reihe entstehen würde
+            bool createsFullRow = false;
+            if (allInVisible && CanPlace(block.transform, snapper))
+            {
+                // Temporär die Zellen markieren
+                List<Vector2Int> occupiedCells = new List<Vector2Int>();
+                foreach (Transform child in block.transform)
+                {
+                    Vector3 childWorldPos = block.transform.position + block.transform.rotation * child.localPosition;
+                    Vector2Int cell = snapper.WorldToGrid(childWorldPos);
+                    occupiedCells.Add(cell);
+                }
+
+                // Prüfe für jede betroffene Reihe
+                HashSet<int> affectedRows = new HashSet<int>();
+                foreach (var cell in occupiedCells)
+                    affectedRows.Add(cell.y);
+
+                foreach (int row in affectedRows)
+                {
+                    int count = 0;
+                    for (int col = 0; col < width; col++)
+                    {
+                        // Zelle ist entweder schon belegt oder wird durch das neue Teil belegt
+                        if (snapper.IsCellOccupied(new Vector2Int(col, row)) ||
+                            occupiedCells.Contains(new Vector2Int(col, row)))
+                        {
+                            count++;
+                        }
+                    }
+                    if (count == width)
+                    {
+                        createsFullRow = true;
+                        break;
+                    }
+                }
+            }
+
+            if (allInVisible && CanPlace(block.transform, snapper) && !createsFullRow)
+            {
+                var groupIDComp = block.AddComponent<BlockGroupID>();
+                groupIDComp.groupID = nextGroupID;
+
+                snapper.MarkCells(block.transform, true);
+                spawned++;
+                nextGroupID++;
+            }
+            else
+            {
+                Destroy(block);
+            }
+        }
+
+        if (spawned < shapeCount)
+            Debug.LogWarning("Nicht alle Shapes konnten platziert werden!");
+    }
+
+
+    /*
+        public void SpawnPuzzleShapes()
+        {
+            int spawned = 0;
+            int maxTries = 1000;
+            int tries = 0;
+            //int nextGroupID = 1; // ID-Zähler für Blockgruppen
+
+            while (spawned < shapeCount && tries < maxTries)
+            {
+                tries++;
+                GameObject prefab = tetrisPrefabs[Random.Range(0, tetrisPrefabs.Length)];
+                int rotSteps = Random.Range(0, 4);
+                Quaternion rotation = Quaternion.Euler(0, 0, rotSteps * 90);
+
+                // Versuche zufällige Position im Grid
+                int x = Random.Range(0, Grid.Instance.width);
+                int y = Random.Range(0, Grid.Instance.height);
+                Vector3 spawnPos = snapper.GridToWorld(new Vector2Int(x, y));
+                GameObject block = Instantiate(prefab, spawnPos, rotation);
+
+                if (CanPlace(block.transform, snapper))
+                {
+                    // BlockGroupID vergeben
+                    var groupIDComp = block.AddComponent<BlockGroupID>();
+                    groupIDComp.groupID = nextGroupID;
+
+                    // Optional: Auch an alle Kinder vergeben (falls gewünscht)
+                    /*
+                    foreach (Transform child in block.transform)
+                    {
+                        var childID = child.gameObject.GetComponent<BlockGroupID>();
+                        if (childID == null)
+                            childID = child.gameObject.AddComponent<BlockGroupID>();
+                        childID.groupID = nextGroupID;
+                    }*/
+    /*
+                    snapper.MarkCells(block.transform, true);
+                    spawned++;
+                    nextGroupID++;
+                }
+                else
+                {
+                    Destroy(block);
+                }
+            }
+
+            if (spawned < shapeCount)
+                Debug.LogWarning("Nicht alle Shapes konnten platziert werden!");
+        }*/
+
+    /*    public void SpawnPuzzleShapes()
+        {
+            int spawned = 0;
+            int maxTries = 1000;
+            int tries = 0;
+
+            int width = Grid.Instance.width;
+            int height = Grid.Instance.height;
+
+            while (spawned < shapeCount && tries < maxTries)
+            {
+                tries++;
+                GameObject prefab = tetrisPrefabs[Random.Range(0, tetrisPrefabs.Length)];
+                int rotSteps = Random.Range(0, 4);
+                Quaternion rotation = Quaternion.Euler(0, 0, rotSteps * 90);
+
+                // ... wie gehabt ...
+                int x = Random.Range(0, width);
+                int y = Random.Range(0, height);
+                Vector3 spawnPos = snapper.GridToWorld(new Vector2Int(x, y));
+                GameObject block = Instantiate(prefab, spawnPos, rotation);
+
+                // Prüfe, ob ALLE Kinder im sichtbaren Bereich liegen
+                bool allInVisible = true;
+                foreach (Transform child in block.transform)
+                {
+                    Vector3 childWorldPos = block.transform.position + block.transform.rotation * child.localPosition;
+                    Vector2Int cell = snapper.WorldToGrid(childWorldPos);
+                    if (cell.y < 0 || cell.y >= visibleHeight)
+                    {
+                        allInVisible = false;
+                        break;
+                    }
+                }
+
+                if (allInVisible && CanPlace(block.transform, snapper))
+                {
+                    var groupIDComp = block.AddComponent<BlockGroupID>();
+                    groupIDComp.groupID = nextGroupID;
+
+                    snapper.MarkCells(block.transform, true);
+                    spawned++;
+                    nextGroupID++;
+                }
+                else
+                {
+                    Destroy(block);
+                }
+            }
+
+            if (spawned < shapeCount)
+                Debug.LogWarning("Nicht alle Shapes konnten platziert werden!");
+        }
+*/
     // Prüft, ob das Shape an seiner aktuellen Position/Rotation ins Grid passt
     bool CanPlace(Transform shape, BlockSnapper snapper)
     {
@@ -81,5 +274,36 @@ public class TetrisPuzzleSpawner : MonoBehaviour
                 return false;
         }
         return true;
+    }
+
+
+    public void SpawnIfUpperInvisibleGridFree(int visibleHeight)
+    {
+        int width = Grid.Instance.width;
+        int height = Grid.Instance.height;
+        int invisibleStart = visibleHeight;
+        int invisibleEnd = height;
+        int upperHalfStart = invisibleStart + (invisibleEnd - invisibleStart) / 2;
+
+        // Prüfe, ob alle Zellen in der oberen Hälfte des unsichtbaren Bereichs frei sind
+        bool allFree = true;
+        for (int y = upperHalfStart; y < invisibleEnd; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                if (snapper.IsCellOccupied(new Vector2Int(x, y)))
+                {
+                    allFree = false;
+                    break;
+                }
+            }
+            if (!allFree) break;
+        }
+
+        if (allFree)
+        {
+            Debug.Log("Obere Hälfte des unsichtbaren Grids ist frei – Puzzle-Elemente werden gespawnt!");
+            SpawnPuzzleShapesOnTop();
+        }
     }
 }
