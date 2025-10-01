@@ -43,7 +43,7 @@ public class BlockLineClearer : MonoBehaviour
         {
             foreach (Transform child in parent.transform)
             {
-                if(child.parent != null) child.parent.GetComponent<BlockDragHandler>().AdjustCollider();
+                if (child.parent != null) child.parent.GetComponent<BlockDragHandler>().AdjustCollider();
                 if (!child.CompareTag("BlockChild")) continue;
                 Vector2Int cell = snapper.WorldToGrid(child.position);
                 if (snapper.IsInsideGrid(cell))
@@ -216,7 +216,7 @@ public class BlockLineClearer : MonoBehaviour
         // Optional: Rückgabe verwenden, falls du noch weitere Schritte brauchst
     }
 
-    private List<int> FindFullRows()
+    public List<int> FindFullRows()
     {
         int width = Grid.Instance.width;
         int height = visibleHeight; // Nur sichtbares Grid prüfen
@@ -257,7 +257,9 @@ public class BlockLineClearer : MonoBehaviour
                 RemoveChildFromParentGrid(t);
                 snapper.SetCellOccupied(tCell, false);
                 parentsToCheck.Add(t.parent);
-                DestroyImmediate(t.gameObject);
+
+                StartCoroutine(AnimateAndDestroyBlockChild(t.gameObject, 0.5f));
+                //DestroyImmediate(t.gameObject);
             }
         }
         return parentsToCheck;
@@ -277,6 +279,139 @@ public class BlockLineClearer : MonoBehaviour
     }
 
 
+    public IEnumerator AnimateAndDestroyBlockChild(GameObject blockChild, float delay = 0.5f)
+    {
+        // 1. Klone das BlockChild für die Animation
+        GameObject clone = Instantiate(blockChild, blockChild.transform.position, blockChild.transform.rotation);
+        clone.transform.localScale = blockChild.transform.localScale;
+        clone.GetComponent<SpriteRenderer>().sortingOrder = 100; // Optional: Animation immer oben
+
+        // 2. Original sofort zerstören (ist nicht mehr im Grid)
+        DestroyImmediate(blockChild);
+
+        // 3. Animation am Klon (z.B. Fade-Out)
+        var sr = clone.GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            float t = 0;
+            Color startColor = sr.color;
+            while (t < delay)
+            {
+                sr.color = Color.Lerp(startColor, new Color(startColor.r, startColor.g, startColor.b, 0), t / delay);
+                t += Time.deltaTime;
+                yield return null;
+            }
+            sr.color = new Color(startColor.r, startColor.g, startColor.b, 0);
+        }
+
+        // 4. Klon zerstören
+        Destroy(clone);
+        BlockLineClearer.Instance.UpdateSingleBlockVisuals();
+
+        //BlockDropper.Instance.ApplyGravityToAllBlocks();
+    }
+
+    public IEnumerator RemoveFullRowBlocksAnimatedAndThenGravity(float animDelay = 0.5f)
+    {
+        var fullRows = FindFullRows();
+        if (fullRows.Count == 0) yield break;
+
+        var blocksToDelete = new List<GameObject>();
+        var allBlocks = FindObjectsByType<Transform>(FindObjectsSortMode.None);
+
+        foreach (var t in allBlocks)
+        {
+            if (t.parent == null) continue;
+            if (t.parent.GetComponent<BlockDragHandler>() == null) continue;
+
+            Vector2Int tCell = snapper.WorldToGrid(t.position);
+            if (fullRows.Contains(tCell.y))
+            {
+                RemoveChildFromParentGrid(t);
+                snapper.SetCellOccupied(tCell, false);
+                blocksToDelete.Add(t.gameObject);
+            }
+        }
+
+        // Starte alle Animationen
+        foreach (var block in blocksToDelete)
+        {
+            StartCoroutine(AnimateAndDestroyBlockChild(block, animDelay));
+        }
+
+        // Warte, bis alle Animationen durch sind
+        yield return new WaitForSeconds(animDelay);
+
+        // Jetzt Gravity auslösen
+        yield return StartCoroutine(BlockDropper.Instance.ApplyGravityToAllBlocksCoroutine(0.2f));
+    }
+
+
+    public void UpdateSingleBlockVisuals()
+    {
+        var allParents = GameObject.FindGameObjectsWithTag("Block");
+        foreach (var parent in allParents)
+        {
+            int childCount = 0;
+            Transform singleChild = null;
+            foreach (Transform child in parent.transform)
+            {
+                if (!child.CompareTag("BlockChild")) continue;
+                childCount++;
+                singleChild = child;
+            }
+
+            if (childCount == 1 && singleChild != null)
+            {
+                var sr = singleChild.GetComponent<SpriteRenderer>();
+                if (sr != null)
+                    sr.color = new Color(0.6f, 0.6f, 0.6f, 1.25f); // z.B. grau und halbtransparent
+            }
+            else
+            {
+                foreach (Transform child in parent.transform)
+                {
+                    if (!child.CompareTag("BlockChild")) continue;
+                    var sr = child.GetComponent<SpriteRenderer>();
+                    if (sr != null && childCount <= 3)
+                        sr.color = new Color(0.7f, 0.7f, 0.7f, 1.5f);
+                    else if (sr != null)
+                        sr.color = Color.white; // Standardfarbe
+                }
+            }
+        }
+    }
+
+
+    public IEnumerator RemoveFullRowBlocksAnimated(float animDelay = 0.5f)
+    {
+        var fullRows = FindFullRows();
+        if (fullRows.Count == 0) yield break;
+
+        var blocksToDelete = new List<GameObject>();
+        var allBlocks = FindObjectsByType<Transform>(FindObjectsSortMode.None);
+
+        foreach (var t in allBlocks)
+        {
+            if (t.parent == null) continue;
+            if (t.parent.GetComponent<BlockDragHandler>() == null) continue;
+
+            Vector2Int tCell = snapper.WorldToGrid(t.position);
+            if (fullRows.Contains(tCell.y))
+            {
+                RemoveChildFromParentGrid(t);
+                snapper.SetCellOccupied(tCell, false);
+                blocksToDelete.Add(t.gameObject);
+            }
+        }
+
+        foreach (var block in blocksToDelete)
+        {
+            StartCoroutine(AnimateAndDestroyBlockChild(block, animDelay));
+        }
+
+        yield return new WaitForSeconds(animDelay);
+    }
 
     /*
         public void RemoveFullRowBlocks()

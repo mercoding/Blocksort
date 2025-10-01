@@ -44,6 +44,7 @@ public class BlockDragHandler : MonoBehaviour
             DestroyImmediate(gameObject);
             return;
         }
+        AdjustCollider();
     }
 
     void LateUpdate()
@@ -55,7 +56,7 @@ public class BlockDragHandler : MonoBehaviour
 
     private void OnMouseDown()
     {
-        if (BlockDragHandler.DragLock) return;
+        if (Global.DragLock) return;
         //BlockLineClearer.Instance.RebuildGridFromScene();
         if (startGhostBlock != null)
         {
