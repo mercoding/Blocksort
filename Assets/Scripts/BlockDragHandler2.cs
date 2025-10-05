@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections;
 
 
-public class BlockDragHandler : MonoBehaviour
+public class BlockDragHandler2 : MonoBehaviour
 {
     private Vector3 dragOffset;
     public bool isDragging = false;
@@ -39,43 +39,38 @@ public class BlockDragHandler : MonoBehaviour
         if (isDragging && (transform.childCount == 0 || !CompareTag("Block")))
         {
             isDragging = false;
-            DestroyStartGhostBlock();
-            DestroyGhostBlock();
+            if (ghostBlock != null) Destroy(ghostBlock);
+            if (startGhostBlock != null) Destroy(startGhostBlock);
             DestroyImmediate(gameObject);
             return;
         }
-        //AdjustCollider();
+        AdjustCollider();
     }
 
-
-    private void GetMousePosition()
+    void LateUpdate()
     {
-        dragOffset = transform.position - GetMouseWorldPos();
-        isDragging = true;
-        lastValidPosition = transform.position;
-        lastValidRotation = transform.rotation;
+        //BlockLineClearer.Instance.RebuildGridFromScene();
+        //BlockLineClearer.Instance.SplitDisconnectedBlocksByGroupID();
+        
     }
 
     private void OnMouseDown()
     {
         if (Global.DragLock) return;
-
-        GetMousePosition();
+        //BlockLineClearer.Instance.RebuildGridFromScene();
+        if (startGhostBlock != null)
+        {
+            Destroy(startGhostBlock);
+            startGhostBlock = null;
+        }
+        dragOffset = transform.position - GetMouseWorldPos();
+        isDragging = true;
+        lastValidPosition = transform.position;
+        lastValidRotation = transform.rotation;
         SaveCurrentGridCells();
         CreateGhostBlock();
-        FindChildUnderMouse();
 
-        // Vor dem Draggen: Alte Zellen freigeben
-        BlockSnapper.Instance.MarkCells(transform, false);
-
-        CreateStartGhostBlock();
-        lastMouseX = Input.mousePosition.x;
-        rotationStep = 0;
-        canRotate = true;
-    }
-
-    private void FindChildUnderMouse()
-    {
+        // Finde das Kind, das unter der Maus angeklickt wurde
         Vector3 mouseWorld = GetMouseWorldPos();
         float minDist = float.MaxValue;
         int closestChild = 0;
@@ -89,11 +84,12 @@ public class BlockDragHandler : MonoBehaviour
             }
         }
         currentPivotChildIndex = closestChild;
-    }
 
-    private void CreateStartGhostBlock()
-    {
-        DestroyStartGhostBlock();
+        // Vor dem Draggen: Alte Zellen freigeben
+        BlockSnapper.Instance.MarkCells(transform, false);
+
+        // Erzeuge Start-Ghost an der Ursprungsposition/-rotation
+        if (startGhostBlock != null) Destroy(startGhostBlock);
         startGhostBlock = Instantiate(gameObject, lastValidPosition, lastValidRotation, null);
         DestroyImmediate(startGhostBlock.GetComponent<BlockDragHandler>());
         foreach (var sr in startGhostBlock.GetComponentsInChildren<SpriteRenderer>())
@@ -101,14 +97,35 @@ public class BlockDragHandler : MonoBehaviour
         startGhostBlock.name = gameObject.name + "_StartGhost";
         startGhostBlock.layer = LayerMask.NameToLayer("Ignore Raycast");
         startGhostBlock.tag = "Ghost"; // <--- Tag auf Parent setzen!
+
+        //foreach (var sr in startGhostBlock.GetComponentsInChildren<SpriteRenderer>())
+        //  sr.color = new Color(0.5f, 0.5f, 1f, 0.2f); // z.B. bläulicher Schatten
+        lastMouseX = Input.mousePosition.x;
+        rotationStep = 0;
+        canRotate = true;
     }
 
     private void OnMouseDrag()
     {
         if (!isDragging) return;
 
-        float deltaX = HandleSwipeRotation();
+        float mouseX = Input.mousePosition.x;
+        float deltaX = mouseX - lastMouseX;
 
+        // Swipe nach rechts
+        if (canRotate && deltaX > swipeThreshold)
+        {
+            rotationStep = (rotationStep + 1) % 4;
+            lastMouseX = mouseX;
+            canRotate = false;
+        }
+        // Swipe nach links
+        else if (canRotate && deltaX < -swipeThreshold)
+        {
+            rotationStep = (rotationStep + 3) % 4; // -1 modulo 4
+            lastMouseX = mouseX;
+            canRotate = false;
+        }
         // Wenn Maus wieder zurück in die Mitte, Rotation erneut erlauben
         if (Mathf.Abs(deltaX) < swipeThreshold * 0.3f)
             canRotate = true;
@@ -118,45 +135,44 @@ public class BlockDragHandler : MonoBehaviour
         if (ghostBlock != null) UpdateGhostBlock();
     }
 
-    private float HandleSwipeRotation()
-    {
-        float mouseX = Input.mousePosition.x;
-        float deltaX = mouseX - lastMouseX;
-
-        if (canRotate && deltaX > swipeThreshold) // Swipe nach rechts
-        {
-            rotationStep = (rotationStep + 1) % 4;
-            lastMouseX = mouseX;
-            canRotate = false;
-        }
-        else if (canRotate && deltaX < -swipeThreshold)  // Swipe nach links
-        {
-            rotationStep = (rotationStep + 3) % 4; // -1 modulo 4
-            lastMouseX = mouseX;
-            canRotate = false;
-        }
-
-        return deltaX;
-    }
-
     private void OnMouseUp()
     {
         if (!isDragging) return;
         isDragging = false;
-        DestroyGhostBlock();
-        CheckGhostPlacement();
 
-        Global.Instance.EndTurn();
-    }
+        if (ghostBlock != null)
+        {
+            Destroy(ghostBlock);
+            ghostBlock = null;
+        }
+        if (startGhostBlock != null)
+        {
+            Destroy(startGhostBlock);
+            startGhostBlock = null;
+        }
 
-    private void CheckGhostPlacement()
-    {
         if (ghostCanPlace)
         {
-            PlaceBlockAtGhostPosition();
+            // Setze Block exakt auf Ghost-Position und -Rotation!
+            transform.position = ghostTargetPosition;
+            transform.rotation = ghostTargetRotation;
+            //BlockSnapper.Instance.MarkCells(transform, true);
+            //SaveCurrentGridCells();
+            //BlockLineClearer.Instance.CheckAndClearFullRows();
+
+            //BlockLineClearer.Instance.RemoveFullRowBlocks();
+            //BlockLineClearer.Instance.SplitDisconnectedBlocksByGroupID();
+            foreach (var ghost in GameObject.FindGameObjectsWithTag("Ghost"))
+                Destroy(ghost);
 
             BlockSnapper.Instance.MarkCells(transform, true);
             SaveCurrentGridCells();
+            //Global.Instance.EndTurn();
+            // Sperre Drag für einen Frame, damit kein neuer Drag sofort gestartet werden kann
+            //StartCoroutine(BlockLineClearer.Instance.UnlockDragNextFrame());
+
+            //Global.Instance.moved = true;
+            //BlockLineClearer.Instance.SplitDisconnectedBlocksByGroupID();
         }
         else
         {
@@ -165,35 +181,8 @@ public class BlockDragHandler : MonoBehaviour
             transform.rotation = lastValidRotation;
             MarkOldCellsAsOccupied();
         }
-    }
-
-    private void PlaceBlockAtGhostPosition()
-    {
-        // Setze Block exakt auf Ghost-Position und -Rotation!
-        transform.position = ghostTargetPosition;
-        transform.rotation = ghostTargetRotation;
-
-        foreach (var ghost in GameObject.FindGameObjectsWithTag("Ghost"))
-            Destroy(ghost);
-        AdjustCollider();
-    }
-
-    private void DestroyGhostBlock()
-    {
-        if (ghostBlock != null)
-        {
-            Destroy(ghostBlock);
-            ghostBlock = null;
-        }
-    }
-
-    private void DestroyStartGhostBlock()
-    {
-        if (startGhostBlock != null)
-        {
-            Destroy(startGhostBlock);
-            startGhostBlock = null;
-        }
+        //BlockLineClearer.Instance.RebuildGridFromScene();
+        Global.Instance.EndTurn();
     }
 
     private void SaveCurrentGridCells()
@@ -225,7 +214,7 @@ public class BlockDragHandler : MonoBehaviour
 
     public void AdjustCollider()
     {
-        if (transform.childCount == 0)
+        if(transform.childCount == 0)
         {
             var existing = GetComponent<BoxCollider2D>();
             if (existing != null) DestroyImmediate(existing);
@@ -291,33 +280,7 @@ public class BlockDragHandler : MonoBehaviour
         Vector3 bestPos = transform.position;
         Quaternion bestRot = transform.rotation;
         int bestRotationStep = 0;
-        CheckBlockRotations(ref mouseWorld, ref mouseGrid, ref minDist, ref found, ref bestPos, ref bestRot, ref bestRotationStep);
-        PlaceBlockAt(ref found, ref bestPos, ref bestRot, ref bestRotationStep);
-    }
 
-
-    private bool CanPlaceAt(int x, int y, Vector3 targetWorldPos, Quaternion testRot)
-    {
-        bool canPlace = true;
-        foreach (Transform child in ghostBlock.transform)
-        {
-            Vector3 localOffset = child.localPosition - ghostBlock.transform.GetChild(currentPivotChildIndex).localPosition;
-            Vector3 rotatedOffset = testRot * localOffset;
-            Vector3 childWorldPos = targetWorldPos + rotatedOffset;
-            Vector2Int cell = BlockSnapper.Instance.WorldToGrid(childWorldPos);
-
-            if (!BlockSnapper.Instance.IsInsideGrid(cell) || BlockSnapper.Instance.IsCellOccupied(cell))
-            {
-                canPlace = false;
-                break;
-            }
-        }
-        return canPlace;
-    }
-
-
-    private void CheckBlockRotations(ref Vector3 mouseWorld, ref Vector2Int mouseGrid, ref float minDist, ref bool found, ref Vector3 bestPos, ref Quaternion bestRot, ref int bestRotationStep)
-    {
         // Probiere alle 4 Rotationen durch
         for (int rotStep = 0; rotStep < 4; rotStep++)
         {
@@ -328,36 +291,43 @@ public class BlockDragHandler : MonoBehaviour
             {
                 for (int y = 0; y < Grid.Instance.height; y++)
                 {
-                    PlaceGhostBlockAt(x, y, testRot, ref found, ref mouseGrid, ref minDist, ref bestPos, ref bestRot, rotStep, ref bestRotationStep);
+                    Vector2Int targetCell = new Vector2Int(x, y);
+                    Vector3 targetWorldPos = BlockSnapper.Instance.GridToWorld(targetCell);
+
+                    Vector3 pivotWorldOffset = ghostBlock.transform.GetChild(currentPivotChildIndex).position - ghostBlock.transform.position;
+                    Vector3 candidatePos = targetWorldPos - pivotWorldOffset;
+
+                    bool canPlace = true;
+                    foreach (Transform child in ghostBlock.transform)
+                    {
+                        Vector3 localOffset = child.localPosition - ghostBlock.transform.GetChild(currentPivotChildIndex).localPosition;
+                        Vector3 rotatedOffset = testRot * localOffset;
+                        Vector3 childWorldPos = targetWorldPos + rotatedOffset;
+                        Vector2Int cell = BlockSnapper.Instance.WorldToGrid(childWorldPos);
+
+                        if (!BlockSnapper.Instance.IsInsideGrid(cell) || BlockSnapper.Instance.IsCellOccupied(cell))
+                        {
+                            canPlace = false;
+                            break;
+                        }
+                    }
+
+                    if (canPlace)
+                    {
+                        float dist = (targetCell - mouseGrid).sqrMagnitude;
+                        if (dist < minDist)
+                        {
+                            minDist = dist;
+                            found = true;
+                            bestPos = candidatePos;
+                            bestRot = testRot;
+                            bestRotationStep = rotStep;
+                        }
+                    }
                 }
             }
         }
-    }
 
-    private void PlaceGhostBlockAt(int x, int y, Quaternion testRot, ref bool found, ref Vector2Int mouseGrid, ref float minDist, ref Vector3 bestPos, ref Quaternion bestRot, int rotStep, ref int bestRotationStep)
-    {
-        Vector2Int targetCell = new Vector2Int(x, y);
-        Vector3 targetWorldPos = BlockSnapper.Instance.GridToWorld(targetCell);
-        Vector3 pivotWorldOffset = ghostBlock.transform.GetChild(currentPivotChildIndex).position - ghostBlock.transform.position;
-        Vector3 candidatePos = targetWorldPos - pivotWorldOffset;
-        bool canPlace = CanPlaceAt(x, y, targetWorldPos, testRot);
-
-        if (canPlace)
-        {
-            float dist = (targetCell - mouseGrid).sqrMagnitude;
-            if (dist < minDist)
-            {
-                minDist = dist;
-                found = true;
-                bestPos = candidatePos;
-                bestRot = testRot;
-                bestRotationStep = rotStep;
-            }
-        }
-    }
-
-    private void PlaceBlockAt(ref bool found, ref Vector3 bestPos, ref Quaternion bestRot, ref int bestRotationStep)
-    {
         ghostCanPlace = found;
         ghostTargetPosition = bestPos;
         ghostTargetRotation = bestRot;
@@ -371,6 +341,14 @@ public class BlockDragHandler : MonoBehaviour
 
         transform.position = bestPos;
         transform.rotation = bestRot;
+    }
+
+    private IEnumerator UnlockDragNextFrame()
+    {
+        BlockDragHandler.DragLock = true;
+        yield return null; // Einen Frame warten
+        BlockDragHandler.DragLock = false;
+        //BlockLineClearer.Instance.RebuildGridFromScene();
     }
 
     public void ForceMouseUp()

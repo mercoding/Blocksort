@@ -48,6 +48,7 @@ public class BlockLineClearer : MonoBehaviour
                 Vector2Int cell = snapper.WorldToGrid(child.position);
                 if (snapper.IsInsideGrid(cell))
                     snapper.SetCellOccupied(cell, true);
+                parent.GetComponent<BlockDragHandler>()?.AdjustCollider();
             }
         }
     }
@@ -259,6 +260,7 @@ public class BlockLineClearer : MonoBehaviour
                 parentsToCheck.Add(t.parent);
 
                 StartCoroutine(AnimateAndDestroyBlockChild(t.gameObject, 0.5f));
+                t.GetComponent<BlockDragHandler>()?.AdjustCollider();
                 //DestroyImmediate(t.gameObject);
             }
         }
