@@ -74,7 +74,7 @@ public class BlockDropper : MonoBehaviour
                 // Collider ggf. anpassen
                 var handler = parent.GetComponent<BlockDragHandler>();
                 if (handler != null)
-                    handler.AdjustCollider();
+                    handler.AdjustChildColliders();
             }
         }
     }
@@ -130,7 +130,7 @@ public class BlockDropper : MonoBehaviour
                 }
                 var handler = parent.GetComponent<BlockDragHandler>();
                 if (handler != null)
-                    handler.AdjustCollider();
+                    handler.AdjustChildColliders();
             }
         }
 
@@ -193,7 +193,7 @@ public class BlockDropper : MonoBehaviour
                     }
                     var handler = parent.GetComponent<BlockDragHandler>();
                     if (handler != null)
-                        handler.AdjustCollider();
+                        handler.AdjustChildColliders();
                     anyMoved = true;
                 }
             }
@@ -258,7 +258,7 @@ public class BlockDropper : MonoBehaviour
                     }
                     var handler = parent.GetComponent<BlockDragHandler>();
                     if (handler != null)
-                        handler.AdjustCollider();
+                        handler.AdjustChildColliders();
                     anyMoved = true;
                 }
             }
@@ -331,7 +331,7 @@ public class BlockDropper : MonoBehaviour
                         }
                         var handler = parent.GetComponent<BlockDragHandler>();
                         if (handler != null)
-                            handler.AdjustCollider();
+                            handler.AdjustChildColliders();
                         anyMoved = true;
                         somethingChanged = true;
                     }
@@ -414,7 +414,7 @@ public class BlockDropper : MonoBehaviour
                     }
                     var handler = parent.GetComponent<BlockDragHandler>();
                     if (handler != null)
-                        handler.AdjustCollider();
+                        handler.AdjustChildColliders();
                     anyMoved = true;
                     gravityActive = true;
                 }
@@ -440,5 +440,38 @@ public class BlockDropper : MonoBehaviour
         }
 
         Global.DragLock = false;
+    }
+
+    public void DropAllBlocksUntilStable()
+    {
+        bool anyBlockDropped;
+        do
+        {
+            anyBlockDropped = false;
+            var allBlocks = GameObject.FindGameObjectsWithTag("Block");
+            foreach (var block in allBlocks)
+            {
+                if (DropBlockIfPossible(block.transform))
+                {
+                    anyBlockDropped = true;
+                }
+            }
+        } while (anyBlockDropped);
+    }
+
+    // Hilfsmethode: Versucht, einen Block um 1 nach unten zu verschieben, falls möglich
+    private bool DropBlockIfPossible(Transform block)
+    {
+        // Prüfe für alle Kinder, ob ein Drop möglich ist
+        foreach (Transform child in block)
+        {
+            Vector2Int cell = BlockSnapper.Instance.WorldToGrid(child.position);
+            Vector2Int belowCell = new Vector2Int(cell.x, cell.y - 1);
+            if (!BlockSnapper.Instance.IsInsideGrid(belowCell) || BlockSnapper.Instance.IsCellOccupied(belowCell))
+                return false; // Mindestens ein Kind kann nicht fallen
+        }
+        // Alle Kinder können fallen: Block um 1 nach unten verschieben
+        block.position += Vector3.down;
+        return true;
     }
 }

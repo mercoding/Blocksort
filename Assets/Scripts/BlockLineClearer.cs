@@ -48,7 +48,8 @@ public class BlockLineClearer : MonoBehaviour
                 Vector2Int cell = snapper.WorldToGrid(child.position);
                 if (snapper.IsInsideGrid(cell))
                     snapper.SetCellOccupied(cell, true);
-                parent.GetComponent<BlockDragHandler>()?.AdjustCollider();
+                parent.GetComponent<BlockDragHandler>().AdjustChildColliders();
+                parent.GetComponent<BlockDragHandler>().isDragging = false;
             }
         }
     }
@@ -95,7 +96,7 @@ public class BlockLineClearer : MonoBehaviour
                 // Collider ggf. anpassen
                 var handler = parent.GetComponent<BlockDragHandler>();
                 if (handler != null)
-                    handler.AdjustCollider();
+                    handler.AdjustChildColliders();
             }
         }
     }
@@ -153,7 +154,7 @@ public class BlockLineClearer : MonoBehaviour
                 // Collider ggf. anpassen
                 var handler = parent.GetComponent<BlockDragHandler>();
                 if (handler != null)
-                    handler.AdjustCollider();
+                    handler.AdjustChildColliders();
             }
         }
     }
@@ -249,6 +250,7 @@ public class BlockLineClearer : MonoBehaviour
 
         foreach (var t in allBlocks)
         {
+            if (t == null) continue; // <--- Schutz gegen zerstörte Objekte
             if (t.parent == null) continue;
             if (t.parent.GetComponent<BlockDragHandler>() == null) continue;
 
@@ -260,8 +262,8 @@ public class BlockLineClearer : MonoBehaviour
                 parentsToCheck.Add(t.parent);
 
                 StartCoroutine(AnimateAndDestroyBlockChild(t.gameObject, 0.5f));
-                t.GetComponent<BlockDragHandler>()?.AdjustCollider();
-                //DestroyImmediate(t.gameObject);
+                // Nach dem Start der Coroutine KEINE weiteren Zugriffe auf t!
+                // t.GetComponent<BlockDragHandler>()?.AdjustCollider(); // <--- Entfernen!
             }
         }
         return parentsToCheck;
@@ -413,6 +415,53 @@ public class BlockLineClearer : MonoBehaviour
         }
 
         yield return new WaitForSeconds(animDelay);
+    }
+
+    public void RemoveFullColumnBlocks()
+    {
+        var fullCols = FindFullColumns();
+        if (fullCols.Count == 0) return;
+
+        var allBlocks = FindObjectsByType<Transform>(FindObjectsSortMode.None);
+
+        foreach (var t in allBlocks)
+        {
+            if (t.parent == null) continue;
+            if (t.parent.GetComponent<BlockDragHandler>() == null) continue;
+
+            Vector2Int tCell = BlockSnapper.Instance.WorldToGrid(t.position);
+            if (fullCols.Contains(tCell.x) && tCell.y < visibleHeight)
+            {
+                RemoveChildFromParentGrid(t);
+                BlockSnapper.Instance.SetCellOccupied(tCell, false);
+                StartCoroutine(AnimateAndDestroyBlockChild(t.gameObject, 0.5f));
+                t.GetComponent<BlockDragHandler>()?.AdjustCollider();
+            }
+        }
+    }
+
+    public List<int> FindFullColumns()
+    {
+        int width = Grid.Instance.width;
+        int height = visibleHeight; // Nur sichtbares Feld!
+        var snapper = BlockSnapper.Instance;
+        List<int> fullCols = new List<int>();
+
+        for (int x = 0; x < width; x++)
+        {
+            bool full = true;
+            for (int y = 0; y < height; y++)
+            {
+                if (!snapper.IsCellOccupied(new Vector2Int(x, y)))
+                {
+                    full = false;
+                    break;
+                }
+            }
+            if (full)
+                fullCols.Add(x);
+        }
+        return fullCols;
     }
 
     /*
@@ -598,6 +647,8 @@ public class BlockLineClearer : MonoBehaviour
                 child.SetParent(newParent.transform, true);
                 child.tag = "BlockChild";
             }
+
+            handler.AdjustChildColliders(); // <--- Collider/Skripte für alle Kinder neu setzen!
         }
     }
 

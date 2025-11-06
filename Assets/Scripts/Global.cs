@@ -36,6 +36,7 @@ public class Global : MonoBehaviour
         StartCoroutine(BlockDropper.Instance.GravityWithInterrupt(0.2f, 0.5f));
 
         TetrisPuzzleSpawner.Instance.SpawnIfUpperInvisibleGridFree(BlockLineClearer.Instance.visibleHeight);
+        BlockLineClearer.Instance.RebuildGridFromScene();
     }
 
 

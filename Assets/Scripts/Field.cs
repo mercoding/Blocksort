@@ -32,17 +32,16 @@ public class Field : MonoBehaviour
 
     public void CreateVisualGrid()
     {
+        Vector3 gridOrigin = Vector3.zero; // Passe ggf. an!
         for (int y = visibleStartY; y <= visibleEndY; y++)
         {
             for (int x = 0; x < Grid.Instance.width; x++)
             {
-                GameObject square = Instantiate(gridSquarePrefab, new Vector3(x, y, 1), Quaternion.identity, transform);
-                // Optional: Sprite oder Farbe anpassen
+                Vector3 pos = gridOrigin + new Vector3(x, y, 0);
+                GameObject square = Instantiate(gridSquarePrefab, pos, Quaternion.identity, transform);
                 var sr = square.GetComponent<SpriteRenderer>();
                 if (sr != null)
-                {
-                    sr.color = new Color(0.8f, 0.8f, 0.8f, 0.3f); // leicht transparent
-                }
+                    sr.color = new Color(0.8f, 0.8f, 0.8f, 0.3f);
             }
         }
     }
