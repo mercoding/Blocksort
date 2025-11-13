@@ -5,14 +5,17 @@ using UnityEngine;
 public class PlayfieldViewport : MonoBehaviour
 {
     [Header("Ränder in Pixeln")]
-    public int leftPx = 290;   // Platz für linke Sidebar
-    public int rightPx = 290;  // Platz für rechte Sidebar
-    public int topPx = 0;    // Platz für Topbar (Punktestand)
-    public int bottomPx = 0;
+    public int leftPx = 5;   // Platz für linke Sidebar
+    public int rightPx = 5;  // Platz für rechte Sidebar
+    public int topPx = 160;    // Platz für Topbar (Punktestand)
+    public int bottomPx = 30;
 
     [Header("Ziel-Welt-Höhe des Spielfelds (Units)")]
-    public float targetWorldHeight = 15f; // z. B. 20 Units für dein Tetris-Gitter
+    public float targetWorldHeight = 20f; // z. B. 20 Units für dein Tetris-Gitter
 
+    [Header("Grid-Größe")]
+    public int gridWidth = 10;   // z. B. 10 Spalten
+    public int gridHeight = 20;  // z. B. 20 Reihen
     Camera cam;
 
     void OnEnable()
@@ -30,30 +33,24 @@ public class PlayfieldViewport : MonoBehaviour
         if (!Application.isPlaying) Apply();
     }
 
+    // ...existing code...
+    // ...existing code...
     void Apply()
     {
         if (cam == null) return;
 
-        float sw = Screen.width;
-        float sh = Screen.height;
+        float cellSize = targetWorldHeight / gridHeight;
 
-        // Viewport-Rect berechnen (0..1)
-        float vx = leftPx / sw;
-        float vy = bottomPx / sh;
-        float vw = (sw - leftPx - rightPx) / sw;
-        float vh = (sh - topPx - bottomPx) / sh;
+        // Kamera-Mitte berechnen
+        float gridCenterX = (gridWidth - 1) / 2f * cellSize;
+        float gridCenterY = (gridHeight - 1) / 2f * cellSize;
 
-        vw = Mathf.Clamp01(vw);
-        vh = Mathf.Clamp01(vh);
-
-        cam.rect = new Rect(vx, vy, vw, vh);
-
-        // Orthographic Size so anpassen, dass targetWorldHeight innerhalb des *sichtbaren* Bereichs passt
-        // In Orthographic gilt: sichtbare Welt-Höhe = 2 * orthoSize * vh (weil Rect die Kamera "beschneidet")
-        // => orthoSize = targetWorldHeight / (2 * vh)
-        if (vh > 0f)
-        {
-            cam.orthographicSize = targetWorldHeight / (2f * vh);
-        }
+        // Verschiebe die Kamera nur um die halbe Zellenhöhe nach unten
+        cam.transform.position = new Vector3(
+            gridCenterX,
+            gridCenterY - cellSize / 2f,
+            -10f
+        );
     }
+    // ...existing code...
 }

@@ -444,15 +444,15 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.33333334
-    y: 0.034965035
-    width: 0.33333334
-    height: 0.96503496
+    x: 0
+    y: 0.010799136
+    width: 1
+    height: 0.9892009
   near clip plane: 0.3
   far clip plane: 2000
   field of view: 52
   orthographic: 1
-  orthographic size: 7.771739
+  orthographic size: 10.700935
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -477,7 +477,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.5, y: 6.95, z: -10}
+  m_LocalPosition: {x: 4.5, y: 9, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -495,11 +495,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dfc4e1f59fedf4fd4a7c2db0a91a61ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  leftPx: 289
-  rightPx: 289
+  leftPx: 0
+  rightPx: 0
   topPx: 0
-  bottomPx: 15
-  targetWorldHeight: 15
+  bottomPx: 30
+  targetWorldHeight: 20
+  gridWidth: 10
+  gridHeight: 20
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
@@ -618,7 +620,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   width: 10
-  height: 21
+  height: 31
   cellSize: 1
   gridOrigin: {x: -0.5, y: -0.5}
   showGridGizmos: 1
@@ -653,7 +655,7 @@ MonoBehaviour:
   fullRows: 
   deletedCells: []
   updated: 0
-  visibleHeight: 10
+  visibleHeight: 15
   ghostSprite: {fileID: 21300000, guid: eacf780d8cc908e4e814340733a2ebc0, type: 3}
 --- !u!114 &793348296
 MonoBehaviour:
@@ -677,7 +679,7 @@ MonoBehaviour:
   - {fileID: 7178521839032019981, guid: 8ff01615fe3934bcdbdc6ae1c20c58c1, type: 3}
   shapeCount: 30
   snapper: {fileID: 793348297}
-  visibleHeight: 10
+  visibleHeight: 15
 --- !u!114 &793348297
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -703,8 +705,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b66fa7085531047bdbc859d86630814b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dropCheckStartY: 11
-  visibleHeight: 10
+  dropCheckStartY: 20
+  visibleHeight: 15
   snapper: {fileID: 793348297}
 --- !u!1 &1636846224
 GameObject:
@@ -763,6 +765,7 @@ GameObject:
   - component: {fileID: 1771383684}
   - component: {fileID: 1771383686}
   - component: {fileID: 1771383685}
+  - component: {fileID: 1771383687}
   m_Layer: 5
   m_Name: Panel
   m_TagString: Untagged
@@ -784,11 +787,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 475465747}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 144.5}
-  m_SizeDelta: {x: -576, y: -285}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: -0}
+  m_SizeDelta: {x: 867, y: 142.16301}
+  m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1771383685
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -818,7 +821,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 60
 --- !u!222 &1771383686
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -827,6 +830,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1771383683}
   m_CullTransparentMesh: 1
+--- !u!114 &1771383687
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1771383683}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6fee9c8a920f4581bbd2d6bde740734, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playfieldViewport: {fileID: 519420033}
+  panelHeightFactor: 6.7
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

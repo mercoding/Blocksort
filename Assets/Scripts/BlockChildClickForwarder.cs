@@ -22,6 +22,8 @@ public class BlockChildClickForwarder : MonoBehaviour
 
     private void OnMouseDown()
     {
+        if (Global.DragLock) return;
+
         parentHandler = GetComponentInParent<BlockDragHandler>();
 
         if (parentHandler != null)

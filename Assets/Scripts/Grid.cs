@@ -15,7 +15,7 @@ public class Grid : MonoBehaviour
 
 
     public static Grid Instance;
-    
+
     private void Awake()
     {
         Instance = this;
@@ -64,5 +64,21 @@ public class Grid : MonoBehaviour
             }
             Gizmos.color = Color.gray; // Zurücksetzen für Linien
         }
+    }
+
+    public void FitGridToScreenWidth()
+    {
+        // Bildschirmbreite in Weltkoordinaten berechnen
+        Camera cam = Camera.main;
+        if (cam == null) return;
+
+        float screenHeight = 2f * cam.orthographicSize;
+        float screenWidth = screenHeight * cam.aspect;
+
+        // Neue Zellbreite berechnen, damit das Grid die volle Breite nutzt
+        cellSize = screenWidth / width;
+
+        // Optional: Grid neu initialisieren, falls nötig
+        gridOrigin = new Vector2(-0.5f, -0.5f); // Linke untere Ecke bleibt gleich oder kann angepasst werden
     }
 }

@@ -56,10 +56,12 @@ public class BlockLineClearer : MonoBehaviour
 
 
 
-    public void DropAllBlocksAsFarAsPossible()
+    public bool DropAllBlocksAsFarAsPossible()
     {
         int width = Grid.Instance.width;
         int height = Grid.Instance.height;
+
+        bool anyBlockDropped = false; // <--- NEU
 
         var allParents = GameObject.FindGameObjectsWithTag("Block");
         foreach (var parent in allParents)
@@ -97,8 +99,12 @@ public class BlockLineClearer : MonoBehaviour
                 var handler = parent.GetComponent<BlockDragHandler>();
                 if (handler != null)
                     handler.AdjustChildColliders();
+
+                anyBlockDropped = true; // <--- Mindestens ein Block ist gefallen!
             }
         }
+
+        return anyBlockDropped; // <--- Rückgabe
     }
 
 
@@ -242,7 +248,7 @@ public class BlockLineClearer : MonoBehaviour
         return fullRows;
     }
 
-    private HashSet<Transform> RemoveChildrenInRows(List<int> fullRows)
+    public HashSet<Transform> RemoveChildrenInRows(List<int> fullRows)
     {
         var snapper = BlockSnapper.Instance;
         var allBlocks = FindObjectsByType<Transform>(FindObjectsSortMode.None);
@@ -760,4 +766,42 @@ public class BlockLineClearer : MonoBehaviour
                 }
             }
         }*/
+
+    public List<int> GetPotentialFullRowsPreviewGhost(Vector3 blockPosition, Quaternion blockRotation, Transform block)
+    {
+        var snapper = BlockSnapper.Instance;
+        int width = Grid.Instance.width;
+        int height = Grid.Instance.height;
+        bool[,] occupied = new bool[width, height];
+        for (int x = 0; x < width; x++)
+            for (int y = 0; y < height; y++)
+                occupied[x, y] = snapper.IsCellOccupied(new Vector2Int(x, y));
+
+        // Markiere die Zellen, die durch den Block nach Platzierung belegt wären
+        for (int i = 0; i < block.childCount; i++)
+        {
+            Transform child = block.GetChild(i);
+            Vector3 simulatedPos = blockPosition + blockRotation * child.localPosition;
+            Vector2Int cell = snapper.WorldToGrid(simulatedPos);
+            if (cell.x >= 0 && cell.x < width && cell.y >= 0 && cell.y < height)
+                occupied[cell.x, cell.y] = true;
+        }
+
+        List<int> fullRows = new List<int>();
+        for (int y = 0; y < height; y++)
+        {
+            bool full = true;
+            for (int x = 0; x < width; x++)
+            {
+                if (!occupied[x, y])
+                {
+                    full = false;
+                    break;
+                }
+            }
+            if (full)
+                fullRows.Add(y);
+        }
+        return fullRows;
+    }
 }

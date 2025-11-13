@@ -104,6 +104,11 @@ public class BlockDropper : MonoBehaviour
                 for (int y = cell.y - 1; y >= 0; y--)
                 {
                     Vector2Int testCell = new Vector2Int(cell.x, y);
+
+                    // KORREKTUR: Prüfe, ob die Zelle im Grid liegt!
+                    if (testCell.x < 0 || testCell.x >= width || testCell.y < 0 || testCell.y >= height)
+                        break;
+
                     bool occupiedByOwnBlock = false;
                     foreach (var other in children)
                     {
@@ -133,8 +138,6 @@ public class BlockDropper : MonoBehaviour
                     handler.AdjustChildColliders();
             }
         }
-
-
     }
 
     public void ApplyGravityToAllBlocks()

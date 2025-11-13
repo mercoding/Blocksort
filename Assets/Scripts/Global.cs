@@ -7,6 +7,7 @@ public class Global : MonoBehaviour
     public static Global Instance;
     public bool moved = false;
     public static bool DragLock = false;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -21,15 +22,18 @@ public class Global : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        /*
         if (moved)
         {
             EndTurn();
             moved = false;
         }
+        */
     }
 
     public void EndTurn()
     {
+
         BlockLineClearer.Instance.DropInvisibleBlocksByFreeRowsOnTop();
 
         //StartCoroutine(GravityAndClearParallel(0.5f, 0.2f));
@@ -39,6 +43,54 @@ public class Global : MonoBehaviour
         BlockLineClearer.Instance.RebuildGridFromScene();
     }
 
+    public void EndTurn(BlockDragHandler lastBlock)
+    {
+        BlockLineClearer.Instance.DropInvisibleBlocksByFreeRowsOnTop();
+        StartCoroutine(GravityAndSelectiveClearLoop(lastBlock, 0.2f));
+    }
+
+    public IEnumerator GravityAndSelectiveClearLoop(BlockDragHandler lastBlock, float gravityDelay = 0.2f)
+    {
+        Global.DragLock = true;
+        bool somethingChanged;
+
+        do
+        {
+            // 1. Gravity: Blöcke fallen lassen, bis keiner mehr fällt
+            yield return StartCoroutine(BlockDropper.Instance.ApplyGravityToAllBlocksCoroutine(gravityDelay));
+            BlockLineClearer.Instance.RebuildGridFromScene();
+
+            // 2. Reihen prüfen und löschen
+            somethingChanged = false;
+            if (lastBlock != null)
+            {
+                var fullRows = BlockLineClearer.Instance.FindFullRows();
+                if (fullRows.Count > 0)
+                {
+                    lastBlock.CheckAndClearAffectedRows(lastBlock.transform);
+                    BlockLineClearer.Instance.SplitDisconnectedBlocksByGroupID();
+                    BlockLineClearer.Instance.RebuildGridFromScene();
+                    somethingChanged = true;
+                }
+            }
+
+            // 3. Spawning etc.
+            TetrisPuzzleSpawner.Instance.SpawnIfUpperInvisibleGridFree(BlockLineClearer.Instance.visibleHeight);
+
+            // 4. Noch einmal alle Reihen prüfen und löschen
+            var moreRows = BlockLineClearer.Instance.FindFullRows();
+            if (moreRows.Count > 0)
+            {
+                BlockLineClearer.Instance.RemoveChildrenInRows(moreRows);
+                BlockLineClearer.Instance.SplitDisconnectedBlocksByGroupID();
+                BlockLineClearer.Instance.RebuildGridFromScene();
+                somethingChanged = true;
+            }
+
+        } while (somethingChanged);
+
+        Global.DragLock = false;
+    }
 
     public IEnumerator GravityAndClearLoop(float animDelay = 0.5f, float gravityDelay = 0.2f)
     {

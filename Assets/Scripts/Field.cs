@@ -14,7 +14,7 @@ public class Field : MonoBehaviour
 
 
     public static int visibleStartY = 0;
-    public static int visibleEndY = 9;
+    public static int visibleEndY = 19;
 
     public static int bufferStartY = 20;
     public static int bufferEndY = 39;

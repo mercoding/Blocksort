@@ -638,5 +638,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isDragging: 0
   ghostSprite: {fileID: 21300000, guid: eacf780d8cc908e4e814340733a2ebc0, type: 3}
+  previewSprite: {fileID: 21300000, guid: ff4f9c37cc637a4489530258f579605c, type: 3}
   visibleHeight: 10
   showColliderOverlay: 1

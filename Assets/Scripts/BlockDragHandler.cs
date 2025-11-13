@@ -37,6 +37,7 @@ public class BlockDragHandler : MonoBehaviour
     private bool pendingDrag = false;
     private Vector3 dragStartMouseWorld;
     private float dragStartThreshold = 0.2f; // z.B. 0.15 Units (anpassen für Touch)
+    private List<GameObject> startGhosts = new List<GameObject>();
 
     private void Start()
     {
@@ -75,6 +76,10 @@ public class BlockDragHandler : MonoBehaviour
             transform.rotation = lastValidRotation;
             MarkOldCellsAsOccupied();
         }
+
+        foreach (var go in startGhosts)
+            if (go != null) Destroy(go);
+        startGhosts.Clear();
     }
 
     private void GetMousePosition()
@@ -140,6 +145,7 @@ public class BlockDragHandler : MonoBehaviour
 
             foreach (var sr in GetComponentsInChildren<SpriteRenderer>())
                 sr.sortingOrder = 100;
+
         }
 
         if (isDragging)
@@ -158,12 +164,17 @@ public class BlockDragHandler : MonoBehaviour
                 if (ghostBlock != null) UpdateGhostBlock();
 
                 blockMoved = true;
+
             }
+            if (ghostBlock != null) UpdateGhostBlock();
+            ShowRowGhostPreview(ghostSprite);
+
         }
     }
 
     public void OnChildMouseUp()
     {
+        DestroyStartGhostBlock();
         if (pendingDrag)
         {
             pendingDrag = false;
@@ -178,12 +189,12 @@ public class BlockDragHandler : MonoBehaviour
             BlockSnapper.Instance.MarkCells(transform, true);
 
             // WICHTIG: Nach jedem Drop Reihen prüfen und Blockstruktur aktualisieren!
-            BlockLineClearer.Instance.RebuildGridFromScene();
-            BlockLineClearer.Instance.RemoveFullRowBlocks(); // <--- Reihen löschen
-            BlockLineClearer.Instance.SplitDisconnectedBlocksByGroupID(); // <--- Splitten
+            //BlockLineClearer.Instance.RebuildGridFromScene();
+            //BlockLineClearer.Instance.RemoveFullRowBlocks(); // <--- Reihen löschen
+            //BlockLineClearer.Instance.SplitDisconnectedBlocksByGroupID(); // <--- Splitten
             AdjustChildColliders(); // <--- Collider/Skripte neu setzen
 
-            Global.Instance.EndTurn();
+            Global.Instance.EndTurn(this);
         }
         else
         {
@@ -199,8 +210,8 @@ public class BlockDragHandler : MonoBehaviour
 
     public void OnChildMouseDown(Transform child)
     {
-        EndDrag();
         if (Global.DragLock) return;
+        EndDrag();
 
         pendingDrag = true;
         dragStartMouseWorld = GetMouseWorldPos();
@@ -209,7 +220,7 @@ public class BlockDragHandler : MonoBehaviour
         currentPivotChildIndex = child.GetSiblingIndex();
 
         GetMousePosition(); // <--- Das berechnet dragOffset!
-
+        CreateStartGhostBlock();
     }
 
     private int FindChildUnderMouse(Vector3 mouseWorld)
@@ -367,18 +378,72 @@ public class BlockDragHandler : MonoBehaviour
                 sr.sortingOrder = 0;
         }*/
 
+    /*
+        private void CheckGhostPlacement()
+        {
+            if (ghostCanPlace)
+            {
+                PlaceBlockAtGhostPosition();
+                BlockSnapper.Instance.MarkCells(transform, true);
+                SaveCurrentGridCells();
+
+                bool somethingChanged;
+                do
+                {
+                    // 1. Gravity: Blöcke fallen lassen, bis keiner mehr fällt
+                    bool anyBlockFell;
+                    do
+                    {
+                        anyBlockFell = BlockLineClearer.Instance.DropAllBlocksAsFarAsPossible();
+                        BlockLineClearer.Instance.RebuildGridFromScene();
+                    } while (anyBlockFell);
+
+                    // 2. Volle Reihen suchen und löschen
+                    var fullRows = BlockLineClearer.Instance.FindFullRows();
+                    somethingChanged = fullRows.Count > 0;
+
+                    if (somethingChanged)
+                    {
+                        BlockLineClearer.Instance.RemoveFullRowBlocks();
+                        BlockLineClearer.Instance.SplitDisconnectedBlocksByGroupID();
+                        BlockLineClearer.Instance.RebuildGridFromScene();
+                    }
+                } while (somethingChanged);
+
+                AdjustChildColliders();
+                Global.Instance.EndTurn();
+            }
+            else
+            {
+                transform.position = lastValidPosition;
+                transform.rotation = lastValidRotation;
+                MarkOldCellsAsOccupied();
+            }
+        }
+    */
+
     private void CheckGhostPlacement()
     {
         if (ghostCanPlace)
         {
             PlaceBlockAtGhostPosition();
-
             BlockSnapper.Instance.MarkCells(transform, true);
             SaveCurrentGridCells();
+
+            bool somethingChanged = false;
+            do
+            {
+                // Gravity und Reihenlöschung wie gehabt ...
+            } while (somethingChanged);
+
+            // <--- Hier rufen!
+            CheckAndClearAffectedRows(transform);
+
+            AdjustChildColliders();
+            Global.Instance.EndTurn(this);
         }
         else
         {
-            // Setze zurück auf Startposition/-rotation
             transform.position = lastValidPosition;
             transform.rotation = lastValidRotation;
             MarkOldCellsAsOccupied();
@@ -545,7 +610,7 @@ public class BlockDragHandler : MonoBehaviour
         foreach (Transform child in ghostBlock.transform)
         {
             child.tag = "Ghost";
-            child.GetComponentInChildren<SpriteRenderer>().sortingOrder = 200; // Direkt unter dem echten Block
+            child.GetComponentInChildren<SpriteRenderer>().sortingOrder = 100; // Direkt unter dem echten Block
         }
     }
 
@@ -681,7 +746,7 @@ public class BlockDragHandler : MonoBehaviour
         foreach (var sr in ghostBlock.GetComponentsInChildren<SpriteRenderer>())
         {
             sr.color = ghostCanPlace ? new Color(0, 1, 0, 1.3f) : new Color(1, 0, 0, 0.3f);
-            sr.GetComponentInChildren<SpriteRenderer>().sortingOrder = 200; // Direkt unter dem echten Block
+            sr.GetComponentInChildren<SpriteRenderer>().sortingOrder = 100; // Direkt unter dem echten Block
 
         }
         // Nach einer Änderung:
@@ -761,5 +826,134 @@ public class BlockDragHandler : MonoBehaviour
     private void OnDestroy()
     {
         EndDrag();
+    }
+
+    public void CheckAndClearAffectedRows(Transform block)
+    {
+        var snapper = BlockSnapper.Instance;
+        int width = Grid.Instance.width;
+
+        HashSet<int> affectedRows = new HashSet<int>();
+        foreach (Transform child in block)
+        {
+            Vector2Int cell = snapper.WorldToGrid(child.position);
+            affectedRows.Add(cell.y);
+        }
+
+        foreach (int row in affectedRows)
+        {
+            bool full = true;
+            for (int x = 0; x < width; x++)
+            {
+                if (!snapper.IsCellOccupied(new Vector2Int(x, row)))
+                {
+                    full = false;
+                    break;
+                }
+            }
+            if (full)
+            {
+                BlockLineClearer.Instance.RemoveChildrenInRows(new List<int> { row });
+                BlockLineClearer.Instance.SplitDisconnectedBlocksByGroupID();
+
+            }
+        }
+        BlockLineClearer.Instance.RebuildGridFromScene();
+    }
+
+    public void ShowRowGhostPreview(Sprite ghostSprite)
+    {
+        foreach (var go in startGhosts)
+            if (go != null) Destroy(go);
+        startGhosts.Clear();
+
+        var snapper = BlockSnapper.Instance;
+        int width = Grid.Instance.width;
+        int height = Grid.Instance.height;
+
+        // Berechne die potenziell vollen Reihen nach Platzierung des aktuellen Blocks
+        var fullRows = GetPotentialFullRowsPreviewGhost();
+
+        // Hole ALLE Block-Kinder aller Blöcke
+        var allBlocks = GameObject.FindGameObjectsWithTag("Block");
+        foreach (var block in allBlocks)
+        {
+            for (int i = 0; i < block.transform.childCount; i++)
+            {
+                Transform child = block.transform.GetChild(i);
+                Vector2Int cell = snapper.WorldToGrid(child.position);
+
+                // Prüfe, ob das Kind in einer vollen Reihe liegt
+                if (fullRows.Contains(cell.y))
+                {
+                    GameObject ghost = new GameObject("StartGhost");
+                    var sr = ghost.AddComponent<SpriteRenderer>();
+                    sr.sprite = ghostSprite;
+                    sr.color = new Color(1f, 0.85f, 0.1f, 0.7f); // Kräftiges Gelb, halbtransparent
+                    sr.sortingOrder = 100;
+                    ghost.transform.position = child.position;
+                    ghost.transform.localScale = child.localScale;
+                    startGhosts.Add(ghost);
+                }
+            }
+        }
+
+        // Zusätzlich: Zeige auch die Kinder des aktuell bewegten Blocks an ihrer Zielposition
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            Transform child = transform.GetChild(i);
+            Vector3 simulatedPos = ghostTargetPosition + ghostTargetRotation * child.localPosition;
+            Vector2Int cell = snapper.WorldToGrid(simulatedPos);
+            if (fullRows.Contains(cell.y))
+            {
+                GameObject ghost = new GameObject("StartGhost");
+                var sr = ghost.AddComponent<SpriteRenderer>();
+                sr.sprite = ghostSprite;
+                sr.color = new Color(1f, 0.85f, 0.1f, 0.7f);
+                sr.sortingOrder = 100;
+                ghost.transform.position = simulatedPos;
+                ghost.transform.localScale = child.localScale;
+                startGhosts.Add(ghost);
+            }
+        }
+    }
+
+    // Returns a list of row indices that would be full if the current block is placed
+    private List<int> GetPotentialFullRowsPreviewGhost()
+    {
+        var snapper = BlockSnapper.Instance;
+        int width = Grid.Instance.width;
+        int height = Grid.Instance.height;
+        bool[,] occupied = new bool[width, height];
+        for (int x = 0; x < width; x++)
+            for (int y = 0; y < height; y++)
+                occupied[x, y] = snapper.IsCellOccupied(new Vector2Int(x, y));
+
+        // Markiere die Zellen, die durch den Block nach Platzierung belegt wären
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            Transform child = transform.GetChild(i);
+            Vector3 simulatedPos = ghostTargetPosition + ghostTargetRotation * child.localPosition;
+            Vector2Int cell = snapper.WorldToGrid(simulatedPos);
+            if (cell.x >= 0 && cell.x < width && cell.y >= 0 && cell.y < height)
+                occupied[cell.x, cell.y] = true;
+        }
+
+        List<int> fullRows = new List<int>();
+        for (int y = 0; y < height; y++)
+        {
+            bool full = true;
+            for (int x = 0; x < width; x++)
+            {
+                if (!occupied[x, y])
+                {
+                    full = false;
+                    break;
+                }
+            }
+            if (full)
+                fullRows.Add(y);
+        }
+        return fullRows;
     }
 }
